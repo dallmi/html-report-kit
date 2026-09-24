@@ -267,7 +267,7 @@ DATA = {
     "mailP": mail, "arts": arts, "vids": vids, "pages": pages, "links": links,
     "pgLevel": pg_level, "pgDiv": pg_div, "pgReg": pg_reg,
     "hcGeduld": HC, "hcDash": HC,
-    "year": 2026, "asOf": "2026-08-21", "prior": prior,
+    "year": 2026, "asOf": "2026-08-21", "prior": prior, "source": "synthetic demo data",
 }
 
 payload = json.dumps(DATA, separators=(",", ":"), ensure_ascii=False)
