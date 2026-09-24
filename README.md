@@ -12,6 +12,7 @@ Single-file HTML dashboard for internal communications performance (mailings, ar
 | `dashboard/template-v3.html` | Redesign mockup (Summary tab, filter bar with chips, standard tab layout, method drawer, prior-year comparison). Same `DATA` slot |
 | `dashboard/comms-intelligence-dashboard-v3-demo.html` | v3 demo build |
 | `dashboard/compare.html` | v2 and v3 side by side with synced tabs and per-tab change notes — open this to review the redesign |
+| `skills/corporate-html-rebrand/SKILL.md` | Agent skill (single file) that re-brands any existing HTML page to the corporate design system without changing data or behaviour — tokens, chart rules, library recipes and the `brand_check.py` checker inline. Upload as-is to an agent platform |
 
 The demo data includes a synthetic `DATA.prior` block (2025, same schema) and `DATA.asOf`; v3 uses them for year-on-year change and the partial-month flag, v2 ignores them. Production needs the prior-year email, article and video exports in the same schema.
 
