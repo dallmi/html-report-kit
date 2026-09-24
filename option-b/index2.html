@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="data-base" content="data/">
+<title>Comms Intelligence Dashboard (v2)</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/styles-v2.css">
+<script type="module" src="src/main-v2.js"></script>
+</head>
+<body>
+<div class="boot" id="boot">Loading data&hellip;<br><br>If this notice stays, the page was opened straight from disk. The dashboard reads its figures from <code>data/*.json</code> and needs to be served over HTTP, for example <code>python3 -m http.server 8000</code> in this folder, then <code>http://localhost:8000/</code>.</div>
+<div class="topbar">
+  <header><div class="hwrap">
+    <div class="brand"><h1>Comms Intelligence Dashboard</h1>
+      <p>Internal communications performance &middot; mailings, articles, pages, video and click tracking</p></div>
+    <div class="hmeta"><b id="hScope">—</b><br>Source: <span id="hSrc">—</span><br>Reach reference month: <b id="hRef">—</b></div>
+  </div></header>
+  <nav class="tabs"><div class="tabwrap">
+    <button class="tab active" data-p="overview">Overview</button>
+    <button class="tab" data-p="mailings">Mailings &middot; iMEP</button>
+    <button class="tab" data-p="articles">Articles &middot; Intranet</button>
+    <button class="tab" data-p="pages">Pages</button>
+    <button class="tab" data-p="videos">Videos</button>
+    <button class="tab" data-p="clicks">Click tracking</button>
+    <button class="tab" data-p="breakdown">Mailings breakdown</button>
+  </div></nav>
+</div>
+
+<main>
+<aside>
+  <div class="fhead"><h2>Control panel</h2><div class="ctx" id="fCtx">Overview</div></div>
+  <div class="fbody">
+    <div id="fDyn"></div>
+    <div class="fsep">
+      <div class="fgroup"><label for="fRef">Reach reference month</label><select id="fRef"></select></div>
+      <div class="btn-row"><button class="btn btn-primary" id="bReset">Reset</button><button class="btn" id="bCsv">Export CSV</button></div>
+      <div class="rowcount" id="fCount"></div>
+    </div>
+    <div class="scopebox">Mailing rates use the <b>simple-average method</b> so every figure reconciles with the source file by hand.<br>
+      <b>Articles reach</b> = unique visitors / Geduld headcount of the published month.<br>
+      Reach is not applied to click tracking &mdash; that export has no date dimension.</div>
+  </div>
+</aside>
+
+<div>
+<section class="panel active" id="p-overview">
+  <div class="sect"><div class="sect-h"><h3>Group view</h3><span id="ovScope"></span></div><div class="kpis" id="ovKpi"></div><div class="vbar" id="ovVal"></div></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Monthly volume &amp; engagement</h4><div class="sub">Emails sent (bars) vs. open rate (line)</div><div id="cOvTrend"></div>
+      <div class="legend"><span><i class="sw1"></i>Emails sent</span><span><i class="sw2"></i>Open rate</span></div></div>
+    <div class="card"><h4>Channel scorecard</h4><div class="sub">Consumed touchpoints by channel in scope</div><div id="cOvMix"></div>
+      <div class="note">Opens and views are not equivalent units &mdash; compare trends within a channel, not across.</div></div>
+  </div>
+  <div class="grid3 sect">
+    <div class="card"><h4>Divisions by emails sent</h4><div class="sub">Corp Comms KPI reporting</div><div id="cOvDiv"></div></div>
+    <div class="card"><h4>Engagement by content type</h4><div class="sub">Click-to-open rate, min. 20 mailings</div><div id="cOvCto"></div></div>
+    <div class="card"><h4>Top packs</h4><div class="sub">Emails sent by tracking ID pack</div><div id="cOvPack"></div></div>
+  </div>
+  <div class="card sect"><h4>Signals worth acting on</h4><div class="sub">Generated from the current filter scope</div><div id="ovInsights"></div></div>
+</section>
+
+<section class="panel" id="p-mailings">
+  <div class="sect"><div class="sect-h"><h3>Mailings &middot; iMEP</h3><span id="mlScope"></span></div><div class="kpis" id="mlKpi"></div><div class="vbar" id="mlVal"></div></div>
+  <div class="sect" id="mlInterp"></div>
+  <div class="sect" id="mlMethod"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Open rate vs. click-to-open by month</h4><div class="sub">Simple average of per-mailing rates</div><div id="cMlRates"></div>
+      <div class="legend"><span><i class="sw1"></i>Open rate</span><span><i class="sw2"></i>Click-to-open</span></div></div>
+    <div class="card"><h4>Audience size vs. open rate</h4><div class="sub">Each audience size band, bubble = mailings sent</div><div id="cMlCluster"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Content type performance</h4><div class="sub">Open rate, simple average</div><div id="cMlCT"></div></div>
+    <div class="card"><h4>Pack performance</h4><div class="sub">Click-to-open by tracking ID pack</div><div id="cMlPack"></div></div>
+  </div>
+  <div class="card sect"><h4>Mailing league table</h4><div class="sub">Click a column header to sort &middot; top 40 in scope</div><div class="scroll"><table id="tMl"></table></div></div>
+</section>
+
+<section class="panel" id="p-articles">
+  <div class="sect"><div class="sect-h"><h3>Articles &middot; Intranet</h3><span id="arScope"></span></div><div class="kpis" id="arKpi"></div>
+    <div class="flag" id="arFlag"></div><div class="vbar" id="arVal"></div></div>
+  <div class="sect" id="arSel"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Views by publishing month</h4><div class="sub">Total views of articles published each month</div><div id="cArTrend"></div></div>
+    <div class="card"><h4>Article reach vs. Geduld headcount</h4><div class="sub">Unique visitors / internal headcount of the publishing month</div><div id="cArReach"></div>
+      <div class="legend"><span><i class="sw1"></i>Average article</span><span><i class="sw2"></i>Best article</span></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Theme performance</h4><div class="sub">Average unique visitors per article</div><div id="cArTheme"></div></div>
+    <div class="card"><h4>Topic tag performance</h4><div class="sub">Any-match: an article counts under every tag it carries</div><div id="cArTopic"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Author performance</h4><div class="sub">Average unique visitors per article, min. 3 articles</div><div id="cArAuthor"></div></div>
+    <div class="card"><h4>News channel performance</h4><div class="sub">Average unique visitors, min. 3 articles</div><div id="cArChan"></div></div>
+  </div>
+  <div class="card sect"><h4>Article league table</h4><div class="sub">Top 30 by views in scope &middot; unique visitors shown per article only, never summed</div><div class="scroll"><table id="tAr"></table></div></div>
+</section>
+
+<section class="panel" id="p-pages">
+  <div class="sect"><div class="sect-h"><h3>Pages</h3><span id="pgScope"></span></div><div class="kpis" id="pgKpi"></div><div class="vbar" id="pgVal"></div></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by unique visitors</h4><div class="sub">Period total, not YTD</div><div id="cPgTop"></div></div>
+    <div class="card"><h4>Visit intensity</h4><div class="sub">Views per unique visitor &mdash; how often people come back</div><div id="cPgInt"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Audience by visitor division</h4><div class="sub">Unique visitors, divisional split</div><div id="cPgDiv"></div></div>
+    <div class="card"><h4>Audience by visitor region</h4><div class="sub">Unique visitors, regional split</div><div id="cPgReg"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Theme performance</h4><div class="sub">Average unique visitors per page</div><div id="cPgTheme"></div></div>
+    <div class="card"><h4>Content type performance</h4><div class="sub">Average unique visitors per page</div><div id="cPgCt"></div></div>
+  </div>
+  <div class="card sect"><h4>Page table</h4><div class="sub">All pages in scope &middot; YTD columns alongside period figures</div><div class="scroll"><table id="tPg"></table></div></div>
+</section>
+
+<section class="panel" id="p-videos">
+  <div class="sect"><div class="sect-h"><h3>Video</h3><span id="vdScope"></span></div><div class="kpis" id="vdKpi"></div><div class="vbar" id="vdVal"></div></div>
+  <div class="sect" id="vdInterp"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Views by month published</h4><div class="sub">Views and completions</div><div id="cVdTrend"></div>
+      <div class="legend"><span><i class="sw1"></i>Views</span><span><i class="sw2"></i>Completions (100%)</span></div></div>
+    <div class="card"><h4>Drop-off curve</h4><div class="sub">Share of started views reaching each quartile</div><div id="cVdFunnel"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Completion rate by owner</h4><div class="sub">Completions / started views, min. 5 videos</div><div id="cVdDiv"></div></div>
+    <div class="card"><h4>Engagement score by owner</h4><div class="sub">Average score, min. 5 videos</div><div id="cVdEng"></div></div>
+  </div>
+  <div class="card sect"><h4>Video league table</h4><div class="sub">Top 30 by views in scope</div><div class="scroll"><table id="tVd"></table></div></div>
+</section>
+
+<section class="panel" id="p-clicks">
+  <div class="sect"><div class="sect-h"><h3>Click tracking &middot; pages &amp; links</h3><span id="clScope"></span></div><div class="kpis" id="clKpi"></div><div class="vbar" id="clVal"></div></div>
+  <div class="sect" id="clInterp"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by views</h4><div class="sub">Intranet click-tracking sites</div><div id="cClPages"></div></div>
+    <div class="card"><h4>CTVR vs. UCTUVR by page</h4><div class="sub">Interaction rate against visitor conversion rate</div><div id="cClCtr"></div>
+      <div class="legend"><span><i class="sw1"></i>CTVR (interaction)</span><span><i class="sw2"></i>UCTUVR (conversion)</span></div></div>
+  </div>
+  <div class="card sect"><h4>Page table</h4><div class="sub">CTVR = clicks / views &middot; UCTUVR = unique clicks / unique visitors</div><div class="scroll"><table id="tCl"></table></div></div>
+  <div class="card sect"><h4>Destination links</h4><div class="sub">Top 25 in scope by total clicks</div><div class="scroll"><table id="tLk"></table></div></div>
+</section>
+
+<section class="panel" id="p-breakdown">
+  <div class="sect"><div class="sect-h"><h3>Mailings breakdown</h3><span>Pivot mailings performance on any dimension</span></div>
+    <div class="card">
+      <div class="exctl">
+        <div style="min-width:200px"><label for="exDim">Break down by</label><select id="exDim"></select></div>
+        <div style="min-width:190px"><label for="exMetric">Metric</label><select id="exMetric"></select></div>
+        <div style="min-width:130px"><label for="exTop">Show</label><select id="exTop"><option value="10">Top 10</option><option value="15" selected>Top 15</option><option value="25">Top 25</option><option value="999">All</option></select></div>
+      </div>
+      <div id="cEx"></div><div class="note" id="exNote"></div>
+    </div></div>
+  <div class="card sect"><h4>Breakdown detail</h4><div class="sub">Full metric set for the selected dimension</div><div class="scroll"><table id="tEx"></table></div></div>
+</section>
+</div>
+</main>
+
+<footer>Filters are contextual: each tab exposes the slicers that belong to its dataset. Mailing rates use the simple-average method (mean of the per-mailing percentage columns) so they reconcile with the source file by hand.
+Theme and topic use any-match logic &mdash; an item carrying several tags counts under each one, so tag totals exceed the item count. Click tracking is a cumulative export with no date dimension.</footer>
+<div class="tt" id="tt"></div>
+</body>
+</html>

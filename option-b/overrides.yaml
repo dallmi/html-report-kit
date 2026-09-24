@@ -1,0 +1,19 @@
+# Manual rows the exports do not contain: internal TV, Viva Engage and email
+# videos, or articles published outside the intranet feed. Kept here instead of
+# ad-hoc workbook cells, so they survive every refresh and are reviewed in Git.
+#
+# Read by scripts/build_clarity_data.py (needs PyYAML once this file has entries).
+# Each row carries every column of its dataset plus a `reason`; articles get
+# their reach from the same formula as every other article.
+#
+# videos:
+#   append:
+#     - {y: 2026, m: 3, t: "Town hall livestream", div: "Group Functions", lang: "EN",
+#        v: 12000, uv: 9000, c1: 10000, c25: 8200, c50: 7100, c75: 6300, c100: 5200, eng: 18.0,
+#        reason: "internal TV platform; figures from the channel owner, 2026-04-02"}
+#
+# articles:
+#   append:
+#     - {y: 2026, m: 5, date: "2026-05-14", t: "Leadership update", au: "Comms team", ov: "News",
+#        th: "Who We Are", tp: [], ts: "", rg: "Global", ch: "Viva Engage", pk: "", tcl: "", tid: "",
+#        v: 8400, uv: 6100, li: 210, co: 35, reason: "Viva Engage post, community analytics export"}

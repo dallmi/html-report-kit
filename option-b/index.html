@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="data-base" content="data/">
+<title>Comms Intelligence Dashboard</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/styles.css">
+<script type="module" src="src/main.js"></script>
+</head>
+<body>
+<div class="boot" id="boot">Loading data&hellip;<br><br>If this notice stays, the page was opened straight from disk. The dashboard reads its figures from <code>data/*.json</code> and needs to be served over HTTP, for example <code>python3 -m http.server 8000</code> in this folder, then <code>http://localhost:8000/</code>.</div>
+<div class="topbar">
+  <header><div class="wrap hwrap">
+    <div class="brand"><h1>Comms Intelligence Dashboard</h1>
+      <p>Internal communications performance &middot; email, intranet articles and pages, video, link clicks</p></div>
+    <div class="hmeta">Data to <b id="hAsOf">—</b> &middot; compared with the same period <b id="hPy">—</b><br>Source: <span id="hSrc">—</span><br>
+      <button class="lnk" id="bMethod">Method &amp; data quality</button></div>
+  </div></header>
+  <nav class="tabs"><div class="wrap tabwrap">
+    <button class="tab active" data-p="summary">Summary</button>
+    <button class="tab" data-p="email">Email</button>
+    <button class="tab" data-p="articles">Articles</button>
+    <button class="tab" data-p="pages">Pages</button>
+    <button class="tab" data-p="video">Video</button>
+    <button class="tab" data-p="clicks">Link clicks</button>
+    <button class="tab" data-p="explore">Explore</button>
+  </div></nav>
+  <div class="wrap"><div class="fbar" id="fbar"></div><div class="chips" id="chips"></div></div>
+</div>
+
+<main class="wrap">
+<!-- ======================= SUMMARY ======================= -->
+<section class="panel active" id="p-summary">
+  <div class="sect-h"><h3>Summary</h3><span id="smScope"></span></div>
+  <div class="sect"><div class="kpis" id="smKpi"></div></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>What changed</h4><div class="sub">The largest movements in the selected period, each linked to the tab that explains it</div><ul class="sig" id="smSig"></ul></div>
+    <div class="card"><h4>Email open rate by month</h4><div class="sub" id="smTrendSub"></div><div id="cSmTrend"></div>
+      <div class="legend" id="smLeg"></div></div>
+  </div>
+  <div class="sect"><div class="chan" id="smChan"></div></div>
+</section>
+
+<!-- ======================= EMAIL ======================= -->
+<section class="panel" id="p-email">
+  <div class="sect-h"><h3>Email</h3><span id="emScope"></span></div>
+  <div class="sect"><div class="kpis" id="emKpi"></div></div>
+  <div class="sect" id="emVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Open rate and click-to-open by month</h4><div class="sub" id="emTrendSub"></div>
+      <div class="sm2"><div><div class="smt">Open rate</div><div id="cEmOpen"></div></div><div><div class="smt">Click-to-open</div><div id="cEmCto"></div></div></div>
+      <div class="legend" id="emLeg"></div></div>
+    <div class="card"><h4>Click-to-open by content type</h4><div class="sub">Click a bar to filter the tab &middot; n = mailings</div><div id="cEmCt"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Mailings compared with their peers</h4>
+      <div class="sub">Peers = mailings of the same content type and audience size band, year to date &middot; mailings under 50 recipients left out</div></div>
+      <div class="seg" id="emSeg"></div></div>
+    <div class="tbl" id="emTblWrap"><table id="tEm"></table></div><div class="tfoot"><span id="emTblNote"></span><button class="lnk" id="emMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>Audience size &middot; packs &middot; divisions</span></summary><div class="mb grid3">
+    <div class="card"><h4>By audience size</h4><div class="sub">Compare mailings within a band, not across bands</div><div class="tbl"><table id="tEmBand"></table></div></div>
+    <div class="card"><h4>Click-to-open by pack</h4><div class="sub">Tracking ID pack, min. 3 mailings &middot; n = mailings</div><div id="cEmPack"></div></div>
+    <div class="card"><h4>Emails sent by division</h4><div class="sub">Corp Comms KPI reporting &middot; click to filter</div><div id="cEmDiv"></div></div>
+  </div></details>
+</section>
+
+<!-- ======================= ARTICLES ======================= -->
+<section class="panel" id="p-articles">
+  <div class="sect-h"><h3>Articles</h3><span id="arScope"></span></div>
+  <div class="sect"><div class="kpis" id="arKpi"></div></div>
+  <div class="sect" id="arVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Views by publishing month</h4><div class="sub" id="arTrendSub"></div><div id="cArTrend"></div><div class="legend" id="arLeg"></div></div>
+    <div class="card"><h4>Median unique visitors per article, by theme</h4><div class="sub">Median, so one viral article cannot carry a theme &middot; click a bar to filter &middot; n = articles</div><div id="cArTheme"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Most-read articles</h4><div class="sub">Reach = unique visitors &divide; internal headcount of the publishing month</div></div></div>
+    <div class="tbl" id="arTblWrap"><table id="tAr"></table></div><div class="tfoot"><span id="arTblNote"></span><button class="lnk" id="arMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>Topic tags &middot; news channels &middot; authors</span></summary><div class="mb grid3">
+    <div class="card"><h4>Topic tags</h4><div class="sub">Median unique visitors, min. 2 articles &middot; any-match</div><div id="cArTopic"></div></div>
+    <div class="card"><h4>News channels</h4><div class="sub">Median unique visitors, min. 3 articles</div><div id="cArChan"></div></div>
+    <div class="card"><h4>Authors</h4><div class="sub">Median unique visitors, min. 3 articles</div><div id="cArAuthor"></div>
+      <div class="note">Not like-for-like: executive messages, features and HR notices reach different audiences. Use for context, not ranking people.</div></div>
+  </div></details>
+</section>
+
+<!-- ======================= PAGES ======================= -->
+<section class="panel" id="p-pages">
+  <div class="sect-h"><h3>Pages</h3><span id="pgScope"></span></div>
+  <div class="sect"><div class="kpis" id="pgKpi"></div></div>
+  <div class="sect" id="pgVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by unique visitors</h4><div class="sub">Page titles, period total</div><div id="cPgTop"></div></div>
+    <div class="card"><h4>Who visits &mdash; by division</h4><div class="sub">Unique visitors &middot; click a bar to filter every view on this tab</div><div id="cPgDiv"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Pages</h4><div class="sub">Views per visitor shows how often people come back</div></div></div>
+    <div class="tbl" id="pgTblWrap"><table id="tPg"></table></div><div class="tfoot"><span id="pgTblNote"></span><button class="lnk" id="pgMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>Visitor region &middot; theme &middot; content type</span></summary><div class="mb grid3">
+    <div class="card"><h4>Who visits &mdash; by region</h4><div class="sub">Unique visitors &middot; click to filter</div><div id="cPgReg"></div></div>
+    <div class="card"><h4>Theme</h4><div class="sub">Average unique visitors per page &middot; n = pages</div><div id="cPgTheme"></div></div>
+    <div class="card"><h4>Content type</h4><div class="sub">Average unique visitors per page &middot; n = pages</div><div id="cPgCt"></div></div>
+  </div></details>
+</section>
+
+<!-- ======================= VIDEO ======================= -->
+<section class="panel" id="p-video">
+  <div class="sect-h"><h3>Video</h3><span id="vdScope"></span></div>
+  <div class="sect"><div class="kpis" id="vdKpi"></div></div>
+  <div class="sect" id="vdVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Where viewers drop off</h4><div class="sub">Share of started views still watching at each point</div><div id="cVdFunnel"></div></div>
+    <div class="card"><h4>Views by publishing month</h4><div class="sub" id="vdTrendSub"></div><div id="cVdTrend"></div><div class="legend" id="vdLeg"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Most-watched videos</h4><div class="sub">Completion = views reaching the end &divide; started views</div></div></div>
+    <div class="tbl" id="vdTblWrap"><table id="tVd"></table></div><div class="tfoot"><span id="vdTblNote"></span><button class="lnk" id="vdMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>By owner</span></summary><div class="mb grid2">
+    <div class="card"><h4>Completion rate by owner</h4><div class="sub">Min. 5 videos &middot; click to filter &middot; n = videos</div><div id="cVdDiv"></div></div>
+    <div class="card"><h4>Engagement score by owner</h4><div class="sub">Average platform score, min. 5 videos</div><div id="cVdEng"></div></div>
+  </div></details>
+</section>
+
+<!-- ======================= LINK CLICKS ======================= -->
+<section class="panel" id="p-clicks">
+  <div class="sect-h"><h3>Link clicks</h3><span id="clScope"></span></div>
+  <div class="sect"><div class="kpis" id="clKpi"></div></div>
+  <div class="sect" id="clVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by views</h4><div class="sub">Click a bar to focus on one page</div><div id="cClPages"></div></div>
+    <div class="card"><h4>Most-clicked links</h4><div class="sub">Where people go from these pages</div><div id="cClLinks"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Pages</h4><div class="sub">Click rate per view = clicks &divide; views &middot; visitors who clicked = unique clickers &divide; unique visitors</div></div></div>
+    <div class="tbl" id="clTblWrap"><table id="tCl"></table></div><div class="tfoot"><span id="clTblNote"></span><button class="lnk" id="clMore"></button></div></div>
+</section>
+
+<!-- ======================= EXPLORE ======================= -->
+<section class="panel" id="p-explore">
+  <div class="sect-h"><h3>Explore email</h3><span>Pivot mailing performance on any dimension &middot; uses the Email filters</span></div>
+  <div class="card sect">
+    <div class="exctl">
+      <div style="min-width:210px"><label for="exDim">Break down by</label><select id="exDim"></select></div>
+      <div style="min-width:190px"><label for="exMetric">Metric</label><select id="exMetric"></select></div>
+      <div style="min-width:120px"><label for="exTop">Show</label><select id="exTop"><option value="10">Top 10</option><option value="15" selected>Top 15</option><option value="25">Top 25</option><option value="999">All</option></select></div>
+      <div style="min-width:140px"><label for="exMin">Min. mailings</label><select id="exMin"><option value="1">1</option><option value="5" selected>5</option><option value="20">20</option></select></div>
+    </div>
+    <div id="cEx"></div><div class="note" id="exNote"></div>
+  </div>
+  <div class="card sect"><h4>Detail</h4><div class="sub">Full metric set for the selected dimension</div><div class="tbl scroll"><table id="tEx"></table></div></div>
+</section>
+
+<footer>Rates in this mockup default to the volume-weighted method; switch under Method &amp; data quality. Every tab uses the same order: headline numbers &rarr; verdict &rarr; trend and ranking &rarr; top-10 table &rarr; more breakdowns on demand.</footer>
+</main>
+
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+<div class="tt" id="tt"></div>
+</body>
+</html>

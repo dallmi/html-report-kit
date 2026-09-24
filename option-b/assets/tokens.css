@@ -1,0 +1,11 @@
+/* Design tokens mirrored from Arbeit/00-design-system/corporate-design-system.css — do not retype hex values elsewhere */
+:root{
+  --primary:#E60000;--primary-dark:#8A000A;--white:#FFFFFF;--black:#000000;
+  --grey-1:#CCCABC;--grey-2:#B8B3A2;--grey-3:#8E8D83;--grey-4:#7A7870;--grey-5:#5A5D5C;--grey-6:#404040;
+  --bordeaux-1:#BD000C;--bordeaux-2:#8A000A;--bordeaux-3:#620004;
+  --bronze-1:#B98E2C;--bronze-2:#946F29;--bronze-3:#6C5312;
+  --bg:#F7F7F5;--surface:#ECEBE4;--surface-alt:#F5F0E1;--row-alt:#F8F7F2;
+  --success:#6F7A1A;--warning:#E4A911;--danger:#BD000C;--info:#0C7EC6;
+  --radius:2px;
+  --font-sans:"Frutiger 45 Light","Frutiger","Helvetica Neue",Helvetica,Arial,"Segoe UI",Roboto,system-ui,sans-serif;
+}
