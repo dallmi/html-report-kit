@@ -1,0 +1,13 @@
+# Photos and screenshots of production reports — real data, never in git
+pictures/
+24. September 2026/
+*.jpeg
+*.jpg
+*.png
+
+# Local clutter
+_to_delete/
+.DS_Store
+__pycache__/
+*.pyc
+.venv/

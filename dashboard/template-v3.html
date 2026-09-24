@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comms Intelligence Dashboard</title>
+<style>
+/* Tokens mirrored from Arbeit/00-design-system/corporate-design-system.css — do not retype hex values elsewhere */
+:root{
+  --primary:#E60000;--primary-dark:#8A000A;--white:#FFFFFF;--black:#000000;
+  --grey-1:#CCCABC;--grey-2:#B8B3A2;--grey-3:#8E8D83;--grey-4:#7A7870;--grey-5:#5A5D5C;--grey-6:#404040;
+  --bordeaux-1:#BD000C;--bronze-1:#B98E2C;--bronze-2:#946F29;
+  --bg:#F7F7F5;--surface:#ECEBE4;--surface-alt:#F5F0E1;--row-alt:#F8F7F2;
+  --success:#6F7A1A;--warning:#E4A911;--danger:#BD000C;
+  --radius:2px;
+  --font-sans:"Frutiger 45 Light","Frutiger","Helvetica Neue",Helvetica,Arial,"Segoe UI",Roboto,system-ui,sans-serif;
+  --card:var(--white);--line:var(--grey-1);--line-soft:var(--surface);
+  --s1:var(--grey-6);   /* current year, every single-series bar */
+  --s-ctx:var(--grey-3);/* context: prior year, non-selected bars */
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--black);font-family:var(--font-sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+.topbar{position:sticky;top:0;z-index:20;background:var(--white);border-bottom:1px solid var(--line)}
+.wrap{max-width:1480px;margin:0 auto;padding-left:28px;padding-right:28px}
+.hwrap{padding-top:16px;padding-bottom:6px;display:flex;gap:22px;align-items:flex-start}
+.brand h1{margin:0;font-size:28px;font-weight:300;letter-spacing:-.01em;line-height:1.15}
+.brand p{margin:4px 0 0;color:var(--grey-4);font-size:13px}
+.hmeta{margin-left:auto;text-align:right;font-size:12px;color:var(--grey-5);line-height:1.6}.hmeta b{color:var(--black);font-weight:600}
+.tabwrap{display:flex;gap:2px;overflow-x:auto}
+.tab{padding:11px 16px 9px;font-size:14px;color:var(--grey-5);cursor:pointer;border:0;background:none;border-bottom:3px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--black)}.tab.active{color:var(--black);border-bottom-color:var(--primary);font-weight:600}
+/* filter bar — replaces the 278px control panel */
+.fbar{border-top:1px solid var(--line-soft);padding-top:10px;padding-bottom:10px;display:flex;gap:10px 14px;align-items:flex-end;flex-wrap:wrap}
+.fctl label{display:block;font-size:11.5px;color:var(--grey-5);font-weight:600;margin-bottom:3px}
+.fctl select{min-width:150px;max-width:220px}
+.fctl.per select{min-width:170px}
+.fctl .cmpnote{font-size:12px;color:var(--grey-4);padding:7px 0}
+.fsp{flex:1}
+select,input[type=search]{width:100%;padding:6px 8px;border:1px solid var(--line);background:var(--white);font-family:inherit;font-size:13px;color:var(--black);border-radius:var(--radius)}
+select:disabled{background:var(--bg);color:var(--grey-4);cursor:not-allowed}
+select:focus,input:focus,.btn:focus-visible,.tab:focus-visible,.lnk:focus-visible{outline:2px solid var(--grey-6);outline-offset:-2px}
+.btn{border:1px solid var(--grey-6);background:var(--white);color:var(--black);padding:6px 12px;font-size:12.5px;cursor:pointer;border-radius:var(--radius);white-space:nowrap}
+.btn:hover{background:var(--surface)}
+.btn b{display:inline-block;min-width:17px;padding:0 4px;margin-left:5px;background:var(--grey-6);color:var(--white);font-size:11px;font-weight:600}
+.lnk{border:0;background:none;padding:0;color:var(--black);font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.lnk:hover{color:var(--grey-5)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-bottom:10px;font-size:12px;color:var(--grey-4)}
+.chips:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface);padding:3px 3px 3px 9px;font-size:12px;color:var(--black)}
+.chip button{border:0;background:none;cursor:pointer;font-size:14px;line-height:1;padding:0 5px;color:var(--grey-5)}.chip button:hover{color:var(--black)}
+main{padding-top:20px;padding-bottom:48px}
+.panel{display:none}.panel.active{display:block}
+.sect{margin-bottom:20px}
+.sect-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px;flex-wrap:wrap}.sect-h h3{margin:0;font-size:20px;font-weight:300}.sect-h span{font-size:12.5px;color:var(--grey-4)}
+/* KPI tiles: max five, change vs prior year + sparkline */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+.kpi{background:var(--card);padding:12px 16px 10px;border-top:3px solid var(--card);position:relative}
+.kpi.hl{border-top-color:var(--primary)}
+.k-l{font-size:12px;color:var(--grey-5);font-weight:600}
+.k-v{font-size:30px;font-weight:300;letter-spacing:-.01em;margin-top:2px;line-height:1.15}
+.k-d{font-size:12px;margin-top:3px;min-height:18px}.k-d:empty{display:none}.k-s{font-size:11.5px;color:var(--grey-4);margin-top:1px}
+.dl{font-weight:600}.dl.up{color:var(--success)}.dl.down{color:var(--danger)}.dl.flat{color:var(--grey-5)}.dl.na{color:var(--grey-4);font-weight:400}
+.dl .vs{font-weight:400;color:var(--grey-4)}
+svg.spark{display:block;width:100%;height:24px;margin-top:6px;overflow:visible}
+.sp-cur{fill:none;stroke:var(--s1);stroke-width:1.5}.sp-prev{fill:none;stroke:var(--s-ctx);stroke-width:1;stroke-dasharray:3 2}
+.info{display:inline-block;width:14px;height:14px;line-height:13px;text-align:center;border:1px solid var(--grey-3);color:var(--grey-5);font-size:10px;font-weight:600;cursor:help;margin-left:3px;vertical-align:1px;border-radius:50%}
+/* verdict line: one sentence, details on demand */
+.vline{background:var(--card);border:1px solid var(--line-soft);border-left:3px solid var(--primary);padding:12px 16px}
+.vline .vh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.vline .vt{font-size:14px;flex:1;min-width:280px}
+.verdict{font-size:11.5px;font-weight:600;padding:2px 8px;background:var(--surface);color:var(--black);white-space:nowrap}
+.verdict.good{background:var(--success);color:var(--white)}.verdict.warn{background:var(--warning);color:var(--black)}.verdict.bad{background:var(--danger);color:var(--white)}
+details.why{margin-top:6px}
+details.why>summary,details.more>summary{cursor:pointer;font-size:12.5px;color:var(--grey-5);list-style:none;user-select:none}
+details.why>summary::-webkit-details-marker,details.more>summary::-webkit-details-marker{display:none}
+details.why>summary::before,details.more>summary::before{content:'▸';display:inline-block;width:14px;color:var(--grey-5)}
+details[open].why>summary::before,details[open].more>summary::before{content:'▾'}
+details.why>summary:hover,details.more>summary:hover{color:var(--black)}
+.whyb{padding:12px 0 2px 14px;font-size:12.5px}
+.whyb ul{margin:8px 0;padding-left:18px}.whyb li{margin-bottom:5px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);margin-bottom:10px}
+.cmp>div{background:var(--card);padding:10px 13px}
+.m-l{font-size:12px;font-weight:600;color:var(--grey-5)}.m-v{font-size:22px;font-weight:300;margin:2px 0}
+.m-q{font-size:11.5px;color:var(--grey-5);font-style:italic}.m-f{font-size:11px;color:var(--grey-4);margin-top:3px}
+.rep{background:var(--surface);padding:9px 12px;margin-top:10px}.rep b{display:block;font-size:11.5px;color:var(--grey-5);margin-bottom:2px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+@media(max-width:1180px){.grid2,.grid3{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line-soft);padding:16px 18px 16px;min-width:0}
+.card h4{margin:0 0 2px;font-size:15px;font-weight:600}.card .sub{font-size:12px;color:var(--grey-4);margin-bottom:12px}
+.card-h{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}.card-h>div:first-child{flex:1;min-width:260px}.card-h .sub{margin-bottom:0}
+.sm2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.smt{font-size:12px;font-weight:600;color:var(--grey-5);margin-bottom:2px}
+svg{display:block;width:100%;overflow:visible}
+.g-lbl{font-size:11.5px;fill:var(--grey-6)}.g-val{font-size:11.5px;fill:var(--black);font-weight:600;paint-order:stroke;stroke:var(--white);stroke-width:3px;stroke-linejoin:round}.g-ax{font-size:11px;fill:var(--grey-4)}.g-n{font-size:11px;fill:var(--grey-4);font-weight:400;paint-order:stroke;stroke:var(--white);stroke-width:3px}
+.bar{fill:var(--s1)}.bar.ctx{fill:var(--s-ctx)}.bar.dim{fill:var(--grey-2)}
+.row.click{cursor:pointer}.row.click:hover .bar{fill:var(--black)}.row.click:hover .g-lbl{fill:var(--black);text-decoration:underline}
+.axis{stroke:var(--black);stroke-width:1;shape-rendering:crispEdges}
+.avgline{stroke:var(--grey-5);stroke-width:1.25;stroke-dasharray:4 3}
+.ln{fill:none;stroke-width:2}.ln.cur{stroke:var(--s1)}.ln.prev{stroke:var(--s-ctx);stroke-width:1.5;stroke-dasharray:5 3}
+.dot{fill:var(--s1);stroke:var(--white);stroke-width:1.5}
+.blk{fill:var(--surface)}
+.hov{fill:transparent}.hov:hover{fill:rgba(64,64,64,.06)}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--grey-6);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:16px;height:0;margin-right:6px;vertical-align:3px;border-top:2px solid var(--s1)}
+.legend i.prev{border-top:2px dashed var(--s-ctx)}.legend i.blk{width:12px;height:10px;border:0;background:var(--surface);vertical-align:-1px}
+.legend i.avg{border-top:1.5px dashed var(--grey-5)}
+.note{font-size:11.5px;color:var(--grey-4);margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl{border-top:1px solid var(--black);border-bottom:1px solid var(--black)}
+.tbl.scroll{max-height:560px;overflow:auto}
+th{text-align:left;font-size:11.5px;font-weight:600;color:var(--black);padding:7px 8px 6px;white-space:nowrap;background:var(--white);box-shadow:inset 0 -1px 0 var(--black)}
+.tbl.scroll thead th{position:sticky;top:0;z-index:2}
+th.num,td.num{text-align:right}
+td{padding:7px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:var(--row-alt)}
+td.t{max-width:320px}td .s{display:block;font-size:11px;color:var(--grey-4);margin-top:1px}
+.tag{display:inline-block;font-size:11px;padding:0 6px;border:1px solid var(--line);color:var(--grey-6);margin:0 4px 2px 0}
+.tag.top{background:var(--surface);border-color:var(--surface);color:var(--black)}
+.tfoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11.5px;color:var(--grey-4)}
+.seg{display:inline-flex;border:1px solid var(--grey-6)}
+.seg button{border:0;background:var(--white);padding:5px 10px;font-size:12px;cursor:pointer;border-left:1px solid var(--grey-6)}
+.seg button:first-child{border-left:0}.seg button:hover{background:var(--surface)}.seg button.on{background:var(--grey-6);color:var(--white)}
+details.more{background:var(--card);border:1px solid var(--line-soft);padding:12px 18px}
+details.more>summary{font-size:14px;font-weight:600;color:var(--black)}
+details.more>summary span{font-weight:400;font-size:12px;color:var(--grey-4);margin-left:8px}
+details.more>.mb{padding-top:14px}
+details.more .card{border:0;padding:0}
+/* summary */
+.sig{list-style:none;margin:4px 0 0;padding:0}
+.sig li{display:grid;grid-template-columns:86px 1fr auto;gap:12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--line-soft);font-size:13px}
+.sig li:first-child{border-top:0}
+.sig .k{font-size:11.5px;font-weight:600;color:var(--grey-5)}
+.chan{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+@media(max-width:1180px){.chan{grid-template-columns:repeat(2,1fr)}}
+.chan>div{background:var(--card);padding:12px 16px}
+.chan .cn{font-size:13px;font-weight:600}.chan .cm{font-size:11.5px;color:var(--grey-4);margin-top:6px}
+.chan .cv{font-size:22px;font-weight:300;margin-top:1px}.chan .cd{font-size:12px;min-height:18px}
+.chan .lnk{margin-top:8px;display:inline-block}
+/* drawer — method, data quality, secondary filters */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:var(--white);border-left:1px solid var(--grey-6);z-index:50;
+  transform:translateX(102%);transition:transform .18s ease;overflow-y:auto;padding:18px 22px 40px}
+.drawer.open{transform:none}
+.dh{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}.dh h2{margin:0;font-size:20px;font-weight:300;flex:1}
+.dh button{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:var(--grey-5)}
+.ds{border-top:1px solid var(--line-soft);padding:12px 0}.ds h5{margin:0 0 6px;font-size:13px;font-weight:600}
+.ds p{margin:5px 0;font-size:12.5px;color:var(--grey-6)}
+.ds .fgroup{margin-bottom:11px}.ds .fgroup label{display:block;font-size:12px;color:var(--grey-5);font-weight:600;margin-bottom:4px}
+.chk{display:flex;flex-direction:column;gap:3px;font-size:12px}.chk div{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid var(--line-soft)}
+.chk b{font-weight:600}
+.rag{display:inline-block;width:8px;height:8px;margin-right:6px}.rag.ok{background:var(--success)}.rag.warn{background:var(--warning)}
+.radio{display:flex;flex-direction:column;gap:6px;font-size:12.5px;margin:6px 0}.radio label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);margin:8px 0}
+.mrow>div{background:var(--card);padding:9px 11px}.mrow .v1{font-size:17px;font-weight:300}.mrow .t1{font-size:11.5px;font-weight:600;color:var(--grey-5)}
+code{background:var(--bg);padding:1px 5px;font-family:Consolas,monospace;font-size:11.5px}
+.exctl{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.exctl label{display:block;font-size:12px;color:var(--grey-5);font-weight:600;margin-bottom:4px}
+footer{padding-bottom:40px;font-size:11.5px;color:var(--grey-4)}
+.tt{position:fixed;pointer-events:none;background:var(--grey-6);color:var(--white);font-size:11.5px;padding:6px 9px;z-index:99;display:none;max-width:320px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <header><div class="wrap hwrap">
+    <div class="brand"><h1>Comms Intelligence Dashboard</h1>
+      <p>Internal communications performance &middot; email, intranet articles and pages, video, link clicks</p></div>
+    <div class="hmeta">Data to <b id="hAsOf">—</b> &middot; compared with the same period <b id="hPy">—</b><br>Source: synthetic demo data<br>
+      <button class="lnk" id="bMethod">Method &amp; data quality</button></div>
+  </div></header>
+  <nav class="tabs"><div class="wrap tabwrap">
+    <button class="tab active" data-p="summary">Summary</button>
+    <button class="tab" data-p="email">Email</button>
+    <button class="tab" data-p="articles">Articles</button>
+    <button class="tab" data-p="pages">Pages</button>
+    <button class="tab" data-p="video">Video</button>
+    <button class="tab" data-p="clicks">Link clicks</button>
+    <button class="tab" data-p="explore">Explore</button>
+  </div></nav>
+  <div class="wrap"><div class="fbar" id="fbar"></div><div class="chips" id="chips"></div></div>
+</div>
+
+<main class="wrap">
+<!-- ======================= SUMMARY ======================= -->
+<section class="panel active" id="p-summary">
+  <div class="sect-h"><h3>Summary</h3><span id="smScope"></span></div>
+  <div class="sect"><div class="kpis" id="smKpi"></div></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>What changed</h4><div class="sub">The largest movements in the selected period, each linked to the tab that explains it</div><ul class="sig" id="smSig"></ul></div>
+    <div class="card"><h4>Email open rate by month</h4><div class="sub" id="smTrendSub"></div><div id="cSmTrend"></div>
+      <div class="legend" id="smLeg"></div></div>
+  </div>
+  <div class="sect"><div class="chan" id="smChan"></div></div>
+</section>
+
+<!-- ======================= EMAIL ======================= -->
+<section class="panel" id="p-email">
+  <div class="sect-h"><h3>Email</h3><span id="emScope"></span></div>
+  <div class="sect"><div class="kpis" id="emKpi"></div></div>
+  <div class="sect" id="emVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Open rate and click-to-open by month</h4><div class="sub" id="emTrendSub"></div>
+      <div class="sm2"><div><div class="smt">Open rate</div><div id="cEmOpen"></div></div><div><div class="smt">Click-to-open</div><div id="cEmCto"></div></div></div>
+      <div class="legend" id="emLeg"></div></div>
+    <div class="card"><h4>Click-to-open by content type</h4><div class="sub">Click a bar to filter the tab &middot; n = mailings</div><div id="cEmCt"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Mailings compared with their peers</h4>
+      <div class="sub">Peers = mailings of the same content type and audience size band, year to date &middot; mailings under 50 recipients left out</div></div>
+      <div class="seg" id="emSeg"></div></div>
+    <div class="tbl" id="emTblWrap"><table id="tEm"></table></div><div class="tfoot"><span id="emTblNote"></span><button class="lnk" id="emMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>Audience size &middot; packs &middot; divisions</span></summary><div class="mb grid3">
+    <div class="card"><h4>By audience size</h4><div class="sub">Compare mailings within a band, not across bands</div><div class="tbl"><table id="tEmBand"></table></div></div>
+    <div class="card"><h4>Click-to-open by pack</h4><div class="sub">Tracking ID pack, min. 3 mailings &middot; n = mailings</div><div id="cEmPack"></div></div>
+    <div class="card"><h4>Emails sent by division</h4><div class="sub">Corp Comms KPI reporting &middot; click to filter</div><div id="cEmDiv"></div></div>
+  </div></details>
+</section>
+
+<!-- ======================= ARTICLES ======================= -->
+<section class="panel" id="p-articles">
+  <div class="sect-h"><h3>Articles</h3><span id="arScope"></span></div>
+  <div class="sect"><div class="kpis" id="arKpi"></div></div>
+  <div class="sect" id="arVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Views by publishing month</h4><div class="sub" id="arTrendSub"></div><div id="cArTrend"></div><div class="legend" id="arLeg"></div></div>
+    <div class="card"><h4>Median unique visitors per article, by theme</h4><div class="sub">Median, so one viral article cannot carry a theme &middot; click a bar to filter &middot; n = articles</div><div id="cArTheme"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Most-read articles</h4><div class="sub">Reach = unique visitors &divide; internal headcount of the publishing month</div></div></div>
+    <div class="tbl" id="arTblWrap"><table id="tAr"></table></div><div class="tfoot"><span id="arTblNote"></span><button class="lnk" id="arMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>Topic tags &middot; news channels &middot; authors</span></summary><div class="mb grid3">
+    <div class="card"><h4>Topic tags</h4><div class="sub">Median unique visitors, min. 2 articles &middot; any-match</div><div id="cArTopic"></div></div>
+    <div class="card"><h4>News channels</h4><div class="sub">Median unique visitors, min. 3 articles</div><div id="cArChan"></div></div>
+    <div class="card"><h4>Authors</h4><div class="sub">Median unique visitors, min. 3 articles</div><div id="cArAuthor"></div>
+      <div class="note">Not like-for-like: executive messages, features and HR notices reach different audiences. Use for context, not ranking people.</div></div>
+  </div></details>
+</section>
+
+<!-- ======================= PAGES ======================= -->
+<section class="panel" id="p-pages">
+  <div class="sect-h"><h3>Pages</h3><span id="pgScope"></span></div>
+  <div class="sect"><div class="kpis" id="pgKpi"></div></div>
+  <div class="sect" id="pgVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by unique visitors</h4><div class="sub">Page titles, period total</div><div id="cPgTop"></div></div>
+    <div class="card"><h4>Who visits &mdash; by division</h4><div class="sub">Unique visitors &middot; click a bar to filter every view on this tab</div><div id="cPgDiv"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Pages</h4><div class="sub">Views per visitor shows how often people come back</div></div></div>
+    <div class="tbl" id="pgTblWrap"><table id="tPg"></table></div><div class="tfoot"><span id="pgTblNote"></span><button class="lnk" id="pgMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>Visitor region &middot; theme &middot; content type</span></summary><div class="mb grid3">
+    <div class="card"><h4>Who visits &mdash; by region</h4><div class="sub">Unique visitors &middot; click to filter</div><div id="cPgReg"></div></div>
+    <div class="card"><h4>Theme</h4><div class="sub">Average unique visitors per page &middot; n = pages</div><div id="cPgTheme"></div></div>
+    <div class="card"><h4>Content type</h4><div class="sub">Average unique visitors per page &middot; n = pages</div><div id="cPgCt"></div></div>
+  </div></details>
+</section>
+
+<!-- ======================= VIDEO ======================= -->
+<section class="panel" id="p-video">
+  <div class="sect-h"><h3>Video</h3><span id="vdScope"></span></div>
+  <div class="sect"><div class="kpis" id="vdKpi"></div></div>
+  <div class="sect" id="vdVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Where viewers drop off</h4><div class="sub">Share of started views still watching at each point</div><div id="cVdFunnel"></div></div>
+    <div class="card"><h4>Views by publishing month</h4><div class="sub" id="vdTrendSub"></div><div id="cVdTrend"></div><div class="legend" id="vdLeg"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Most-watched videos</h4><div class="sub">Completion = views reaching the end &divide; started views</div></div></div>
+    <div class="tbl" id="vdTblWrap"><table id="tVd"></table></div><div class="tfoot"><span id="vdTblNote"></span><button class="lnk" id="vdMore"></button></div></div>
+  <details class="more sect"><summary>More breakdowns<span>By owner</span></summary><div class="mb grid2">
+    <div class="card"><h4>Completion rate by owner</h4><div class="sub">Min. 5 videos &middot; click to filter &middot; n = videos</div><div id="cVdDiv"></div></div>
+    <div class="card"><h4>Engagement score by owner</h4><div class="sub">Average platform score, min. 5 videos</div><div id="cVdEng"></div></div>
+  </div></details>
+</section>
+
+<!-- ======================= LINK CLICKS ======================= -->
+<section class="panel" id="p-clicks">
+  <div class="sect-h"><h3>Link clicks</h3><span id="clScope"></span></div>
+  <div class="sect"><div class="kpis" id="clKpi"></div></div>
+  <div class="sect" id="clVerdict"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by views</h4><div class="sub">Click a bar to focus on one page</div><div id="cClPages"></div></div>
+    <div class="card"><h4>Most-clicked links</h4><div class="sub">Where people go from these pages</div><div id="cClLinks"></div></div>
+  </div>
+  <div class="card sect"><div class="card-h"><div><h4>Pages</h4><div class="sub">Click rate per view = clicks &divide; views &middot; visitors who clicked = unique clickers &divide; unique visitors</div></div></div>
+    <div class="tbl" id="clTblWrap"><table id="tCl"></table></div><div class="tfoot"><span id="clTblNote"></span><button class="lnk" id="clMore"></button></div></div>
+</section>
+
+<!-- ======================= EXPLORE ======================= -->
+<section class="panel" id="p-explore">
+  <div class="sect-h"><h3>Explore email</h3><span>Pivot mailing performance on any dimension &middot; uses the Email filters</span></div>
+  <div class="card sect">
+    <div class="exctl">
+      <div style="min-width:210px"><label for="exDim">Break down by</label><select id="exDim"></select></div>
+      <div style="min-width:190px"><label for="exMetric">Metric</label><select id="exMetric"></select></div>
+      <div style="min-width:120px"><label for="exTop">Show</label><select id="exTop"><option value="10">Top 10</option><option value="15" selected>Top 15</option><option value="25">Top 25</option><option value="999">All</option></select></div>
+      <div style="min-width:140px"><label for="exMin">Min. mailings</label><select id="exMin"><option value="1">1</option><option value="5" selected>5</option><option value="20">20</option></select></div>
+    </div>
+    <div id="cEx"></div><div class="note" id="exNote"></div>
+  </div>
+  <div class="card sect"><h4>Detail</h4><div class="sub">Full metric set for the selected dimension</div><div class="tbl scroll"><table id="tEx"></table></div></div>
+</section>
+
+<footer>Rates in this mockup default to the volume-weighted method; switch under Method &amp; data quality. Every tab uses the same order: headline numbers &rarr; verdict &rarr; trend and ranking &rarr; top-10 table &rarr; more breakdowns on demand.</footer>
+</main>
+
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+<div class="tt" id="tt"></div>
+
+<script>const DATA = /*__DATA__*/null;</script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
+/* 999,500+ rounds to 1.00m, never "1000k" */
+const fmt=n=>{n=+n||0;const a=Math.abs(n);if(a>=1e9)return(n/1e9).toFixed(1)+'bn';if(a>=999500)return(n/1e6).toFixed(2)+'m';if(a>=1e4)return Math.round(n/1e3)+'k';return Math.round(n).toLocaleString('en-GB');};
+const full=n=>Math.round(+n||0).toLocaleString('en-GB');
+const pctAx=v=>{const x=v*100;return(Math.abs(x-Math.round(x))<1e-6?x.toFixed(0):x.toFixed(1))+'%';};
+const pct=(n,d=1)=>n==null||isNaN(n)?'n/a':((+n||0)*100).toFixed(d)+'%';
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const trunc=(s,n)=>{s=String(s==null?'':s);return s.length>n?s.slice(0,n-1)+'…':s;};
+const isDim=l=>/^\(|^unknown$/i.test(String(l));
+const uniq=a=>[...new Set(a)].filter(x=>x!=null&&x!=='').sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+const uniqTags=l=>[...new Set(l.flat())].filter(Boolean).sort((a,b)=>a.localeCompare(b));
+const sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const median=a=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y),h=s.length>>1;return s.length%2?s[h]:(s[h-1]+s[h])/2;};
+const tt=$('#tt');
+function bindTip(el,html){el.addEventListener('mousemove',e=>{tt.innerHTML=html;tt.style.display='block';
+  tt.style.left=Math.min(e.clientX+14,window.innerWidth-340)+'px';tt.style.top=(e.clientY+16)+'px';});
+  el.addEventListener('mouseleave',()=>tt.style.display='none');}
+const SVGNS='http://www.w3.org/2000/svg';
+function el(t,a={},p){const n=document.createElementNS(SVGNS,t);for(const k in a)n.setAttribute(k,a[k]);if(p)p.appendChild(n);return n;}
+function svgBox(host,h){host.innerHTML='';const w=host.clientWidth||600;const s=el('svg',{viewBox:`0 0 ${w} ${h}`,height:h},host);return{s,w,h};}
+const empty=s=>{el('text',{x:0,y:24,class:'g-lbl'},s).textContent='No data in scope';};
+/* page titles instead of .aspx filenames; domains instead of full tracking URLs */
+const pageTitle=u=>{const s=decodeURIComponent(String(u).split('?')[0].replace(/\/$/,'').split('/').pop()||u).replace(/\.aspx$/i,'').replace(/[-_]+/g,' ').trim();return s.charAt(0).toUpperCase()+s.slice(1);};
+const shortUrl=u=>{const m=String(u).match(/^https?:\/\/([^/?#]+)(\/[^?#]*)?/);if(!m)return u;const p=(m[2]||'').split('/').filter(Boolean);return m[1]+(p.length?(p.length>1?'/…/':'/')+p[p.length-1]:'');};
+
+/* ==================== time basis ==================== */
+const Y=DATA.year||2026,PY=DATA.prior?DATA.prior.year:null;
+const AS_OF=DATA.asOf?new Date(DATA.asOf+'T00:00:00'):null;
+const PARTIAL=AS_OF&&AS_OF.getDate()<new Date(AS_OF.getFullYear(),AS_OF.getMonth()+1,0).getDate()?AS_OF.getMonth()+1:null;
+const mkMail=P=>({M:P,N:P.es.length,DIM:P.dims});
+const CUR={ml:mkMail(DATA.mailP),arts:DATA.arts,vids:DATA.vids};
+const PRV=DATA.prior?{ml:mkMail(DATA.prior.mailP),arts:DATA.prior.arts||[],vids:DATA.prior.vids||[]}:null;
+const MONTHS=uniq(CUR.ml.M.m).map(Number);
+
+/* ==================== state ==================== */
+const ML0={cc:'all',div:'all',ct:'all',th:'all',tp:'all',tm:'all',cl:'all',pk:'all',tcl:'all',tid:''};
+const S={period:'ytd',method:'w',tab:'summary',drawer:null,
+  ml:{...ML0},
+  ar:{name:'all',au:'all',ov:'all',th:'all',tp:'all',ts:'all',rg:'all',ch:'all',pk:'all',tcl:'all'},
+  vd:{div:'all',lang:'all',name:''},
+  pg:{site:'all',div:'all',ct:'all',th:'all',tp:'all',org:'all',rg:'all',vdiv:'all',vreg:'all'},
+  cl:{site:'all',url:'all',dest:'',link:''},
+  more:{},emSort:'bestO'};
+/* one cut-off for every dataset, so tabs never disagree (a later export must not add months the others lack) */
+const CUTOFF=AS_OF?AS_OF.getMonth()+1:Math.max(...MONTHS);
+const inPer=m=>{if(m>CUTOFF)return false;const p=S.period;if(p==='ytd')return true;if(p[0]==='q')return Math.ceil(m/3)===+p.slice(1);return m===+p.slice(1);};
+const perMonths=()=>MONTHS.filter(inPer);
+function periodLabel(){const p=S.period,asof=AS_OF?`${AS_OF.getDate()} ${MN[AS_OF.getMonth()+1]}`:'';
+  if(p==='ytd')return`Year to date ${Y}${asof?' (to '+asof+')':''}`;
+  if(p[0]==='q'){const q=+p.slice(1),ms=MONTHS.filter(m=>Math.ceil(m/3)===q);return`Q${q} ${Y}${ms.includes(PARTIAL)?' (to '+asof+')':''}`;}
+  const m=+p.slice(1);return`${MN[m]} ${Y}${m===PARTIAL?' (to '+asof+', partial)':''}`;}
+
+/* ==================== rate method ==================== */
+const R=(a,k)=>!a||!a.n?null:(S.method==='w'?{open:a.wOpen,cto:a.wCto,ctr:a.wCtr}:{open:a.open,cto:a.cto,ctr:a.ctr})[k];
+const methodLbl=()=>S.method==='w'?'weighted':'simple average';
+
+/* ==================== change vs prior year ==================== */
+const dRate=(c,p)=>c==null||p==null?null:{v:(c-p)*100,k:'pp'};
+const dCount=(c,p)=>!p?null:{v:(c/p-1)*100,k:'%'};
+const dPts=(c,p)=>c==null||p==null?null:{v:c-p,k:'pts'};
+function dHtml(d,o={}){if(!d)return`<span class="dl na">${esc(o.na||('No '+(PY||'prior-year')+' data'))}</span>`;
+  const tol=d.k==='pp'?0.3:d.k==='pts'?0.5:1,flat=Math.abs(d.v)<tol,up=d.v>0;
+  const cls=o.neutral||flat?'flat':(up===(o.good!=='down')?'up':'down');
+  const unit=d.k==='pp'?' pp':d.k==='pts'?' pts':'%';
+  return`<span class="dl ${cls}">${flat?'':up?'▲ ':'▼ '}${up?'+':''}${d.v.toFixed(1)}${unit}<span class="vs"> vs ${PY}</span></span>`;}
+const dTxt=d=>!d?'':`${d.v>0?'+':''}${d.v.toFixed(1)}${d.k==='pp'?' pp':d.k==='pts'?' pts':'%'} vs ${PY}`;
+
+/* ==================== charts ==================== */
+function niceStep(r){const e=Math.pow(10,Math.floor(Math.log10(r||1))),f=r/e;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e;}
+function niceScale(lo,hi,n=4){if(hi===lo)hi=lo+(Math.abs(lo)||1)*0.1;const st=niceStep((hi-lo)/n),a=Math.floor(lo/st)*st,b=Math.ceil(hi/st)*st,t=[];
+  for(let v=a;v<=b+st/2;v+=st)t.push(+v.toFixed(10));return{lo:a,hi:b,ticks:t};}
+
+/* ranked bars: n next to every value, dashed average line, selected bar dark / others context grey, click to filter */
+function hBar(id,rows,o={}){const host=$('#'+id);if(!host)return;rows=rows.slice(0,o.limit||10);
+  const rowH=o.rowH||26,pad=4,top=o.avg!=null?18:0,h=Math.max(60,top+rows.length*rowH+pad*2);const{s,w}=svgBox(host,h);
+  if(!rows.length)return empty(s);
+  const f=o.fmt||fmt,hasN=rows.some(r=>r.n!=null),labelW=Math.min(o.labelW||170,w*0.42),valW=hasN?104:64;
+  const max=Math.max(...rows.map(r=>Math.abs(r.v)),o.avg||0)||1,bw0=w-labelW-valW;
+  if(o.avg!=null){const x=labelW+(o.avg/max)*bw0;el('line',{x1:x,x2:x,y1:top-3,y2:h-pad,class:'avgline'},s);
+    const anc=x>w-90?'end':x<labelW+60?'start':'middle';
+    el('text',{x,y:11,class:'g-ax','text-anchor':anc},s).textContent=`Average = ${f(o.avg)}`;}
+  rows.forEach((r,i)=>{const y=top+pad+i*rowH,g=el('g',{class:'row'+(o.onClick?' click':'')},s),maxCh=Math.max(8,Math.floor(labelW/6.3));
+    const t=el('text',{x:0,y:y+rowH/2+4,class:'g-lbl'},g);t.textContent=trunc(r.l,maxCh);
+    const bw=Math.max(1,(Math.abs(r.v)/max)*bw0);
+    el('rect',{x:labelW,y:y+5,width:bw,height:rowH-11,class:'bar'+(isDim(r.l)?' dim':(o.sel&&o.sel!==r.l?' ctx':''))},g);
+    const vt=el('text',{x:labelW+bw+6,y:y+rowH/2+4,class:'g-val'},g);vt.textContent=f(r.v);
+    if(r.n!=null){const n=el('tspan',{class:'g-n',dx:5},vt);n.textContent='n='+full(r.n);}
+    el('rect',{x:0,y,width:w,height:rowH,fill:'transparent'},g);
+    bindTip(g,`<b>${esc(r.l)}</b><br>${f(r.v)}${r.n!=null?' · n = '+full(r.n):''}${r.note?'<br>'+esc(r.note):''}${o.onClick?'<br><i>Click to '+(o.sel===r.l?'clear filter':'filter')+'</i>':''}`);
+    if(o.onClick)g.addEventListener('click',()=>{tt.style.display='none';o.onClick(r);});});
+}
+
+/* line chart: this year solid, prior year dashed, partial month shaded (Pastel block), labelled end value */
+function lineChart(id,cats,series,o={}){const host=$('#'+id);if(!host)return;const h=o.h||210;const{s,w}=svgBox(host,h);
+  const vals=series.flatMap(x=>x.v).filter(v=>v!=null);if(!cats.length||!vals.length)return empty(s);
+  const f=o.fmt||fmt,ml=o.ml||42,mr=o.mr||46,mt=18,mb=22,iw=w-ml-mr,ih=h-mt-mb;
+  /* minSpan keeps small wobbles from looking dramatic (rates: at least 10 points on the axis) */
+  let vlo=o.zero?0:Math.min(...vals),vhi=Math.max(...vals);if(o.minSpan&&vhi-vlo<o.minSpan){const c=(vhi+vlo)/2;vlo=Math.max(0,c-o.minSpan/2);vhi=vlo+o.minSpan;}
+  const sc=niceScale(vlo,vhi,o.ticks||4),lo=sc.lo,hi=sc.hi;
+  const step=cats.length>1?iw/(cats.length-1):iw,X=i=>ml+(cats.length>1?i*step:iw/2),Yp=v=>mt+ih-(v-lo)/((hi-lo)||1)*ih;
+  (o.blocks||[]).forEach(b=>{if(b.i0==null||b.i0<0)return;const x0=Math.max(ml-6,X(b.i0)-step/2),x1=Math.min(ml+iw+mr-8,X(b.i1)+step/2);
+    el('rect',{x:x0,y:mt-4,width:Math.max(8,x1-x0),height:ih+4,class:'blk'},s);
+    el('text',{x:(x0+x1)/2,y:mt-7,class:'g-ax','text-anchor':'middle'},s).textContent=b.label;});
+  sc.ticks.forEach(t=>el('text',{x:ml-8,y:Yp(t)+4,class:'g-ax','text-anchor':'end'},s).textContent=(o.fmtAxis||f)(t));
+  el('line',{x1:ml,x2:ml+iw,y1:mt+ih,y2:mt+ih,class:'axis'},s);
+  cats.forEach((c,i)=>el('text',{x:X(i),y:h-5,class:'g-ax','text-anchor':'middle'},s).textContent=c);
+  series.slice().reverse().forEach(sr=>{let d='';sr.v.forEach((v,i)=>{if(v==null)return;d+=(d&&sr.v[i-1]!=null?'L':'M')+X(i)+' '+Yp(v);});
+    if(d)el('path',{d,class:'ln '+sr.cls},s);
+    if(sr.cls==='cur'){sr.v.forEach((v,i)=>{if(v!=null)el('circle',{cx:X(i),cy:Yp(v),r:3,class:'dot'},s);});
+      let li=-1;sr.v.forEach((v,i)=>{if(v!=null)li=i;});
+      if(li>=0)el('text',{x:X(li)+7,y:Yp(sr.v[li])+4,class:'g-val'},s).textContent=f(sr.v[li]);}});
+  cats.forEach((c,i)=>{const r=el('rect',{x:X(i)-step/2,y:mt,width:Math.max(10,step),height:ih,class:'hov'},s);
+    bindTip(r,`<b>${esc(c)}</b>`+series.map(sr=>`<br>${esc(sr.name)}: ${sr.v[i]==null?'—':f(sr.v[i])}`).join('')+(o.tipExtra?o.tipExtra(i):''));});}
+
+function sparkSvg(cur,prev){const all=[...cur,...(prev||[])].filter(v=>v!=null);if(all.length<3)return'';
+  const lo=Math.min(...all),hi=Math.max(...all),r=(hi-lo)||1,n=cur.length,X=i=>n>1?i/(n-1)*100:50,Yp=v=>22-((v-lo)/r)*20;
+  const pts=a=>a.map((v,i)=>v==null?null:X(i).toFixed(1)+','+Yp(v).toFixed(1)).filter(Boolean).join(' ');
+  return`<svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none">${prev?`<polyline points="${pts(prev)}" class="sp-prev" vector-effect="non-scaling-stroke"/>`:''}<polyline points="${pts(cur)}" class="sp-cur" vector-effect="non-scaling-stroke"/></svg>`;}
+
+function kpis(id,items){$('#'+id).innerHTML=items.map(k=>`<div class="kpi${k.hl?' hl':''}"><div class="k-l">${k.l}${k.info?` <span class="info" data-tip="${esc(k.info)}">i</span>`:''}</div>
+  <div class="k-v">${k.v}</div><div class="k-d">${k.d||''}</div><div class="k-s">${k.s||''}</div>${k.spark||''}</div>`).join('');
+  $$('#'+id+' [data-tip]').forEach(e=>bindTip(e,esc(e.dataset.tip)));}
+
+function verdictLine(host,{verdict,cls,text,why}){$('#'+host).innerHTML=`<div class="vline"><div class="vh"><span class="verdict${cls?' '+cls:''}">${esc(verdict)}</span><div class="vt">${text}</div></div>
+  ${why?`<details class="why"><summary>Why, and how to report it</summary><div class="whyb">${why}</div></details>`:''}</div>`;}
+
+function table(id,cols,rows,o={}){const lim=S.more[id]?(o.max||100):(o.limit||10),shown=rows.slice(0,lim);
+  $('#'+id).innerHTML='<thead><tr>'+cols.map(c=>`<th class="${c.num?'num':''}">${c.h}</th>`).join('')+'</tr></thead><tbody>'+
+    (shown.length?shown.map(r=>'<tr>'+cols.map(c=>`<td class="${c.num?'num':''}${c.cls?' '+c.cls:''}">${c.f(r)}</td>`).join('')+'</tr>').join('')
+    :`<tr><td colspan="${cols.length}" style="color:var(--grey-4);padding:18px 8px">Nothing matches the current filters.</td></tr>`)+'</tbody>';
+  const wrap=$('#'+id+'Wrap')||$('#'+id).parentElement;wrap.classList.toggle('scroll',!!S.more[id]);
+  const note=$('#'+(o.noteId||'')),more=$('#'+(o.moreId||''));
+  if(note)note.textContent=`Showing ${full(shown.length)} of ${full(rows.length)}${o.noteExtra?' · '+o.noteExtra:''}`;
+  if(more){more.style.display=rows.length>(o.limit||10)?'':'none';more.textContent=S.more[id]?'Show top 10':`Show all ${full(Math.min(rows.length,o.max||100))}`;
+    more.onclick=()=>{S.more[id]=!S.more[id];render();};}}
+
+/* ==================== mail model ==================== */
+function mailIdx(D,f,ignore){const out=[],{M,DIM,N}=D,tq=(f.tid||'').toLowerCase(),ig=ignore||{};
+  for(let i=0;i<N;i++){
+    if(!ig.period&&!inPer(M.m[i]))continue;
+    if(f.cc!=='all'&&DIM.cc[M.cols.cc[i]]!==f.cc)continue;
+    if(!ig.div&&f.div!=='all'&&DIM.div[M.cols.div[i]]!==f.div)continue;
+    if(!ig.ct&&f.ct!=='all'&&DIM.ct[M.cols.ct[i]]!==f.ct)continue;
+    if(f.th!=='all'&&!M.th[i].includes(f.th))continue;
+    if(f.tp!=='all'&&!M.tp[i].includes(f.tp))continue;
+    if(f.tm!=='all'&&DIM.tm[M.cols.tm[i]]!==f.tm)continue;
+    if(!ig.cl&&f.cl!=='all'&&DIM.cl[M.cols.cl[i]]!==f.cl)continue;
+    if(f.pk!=='all'){const p=DIM.pk[M.cols.pk[i]];if(f.pk==='__blank__'?p:p!==f.pk)continue;}
+    if(f.tcl!=='all'){const c=DIM.tcl[M.cols.tcl[i]];if(f.tcl==='__blank__'?c:c!==f.tcl)continue;}
+    if(tq&&!String(DIM.tid[M.cols.tid[i]]||'').toLowerCase().includes(tq))continue;
+    out.push(i);}
+  return out;}
+function aggOf(o){return{...o,n:o.n,open:mean(o.po),cto:mean(o.pc),ctr:mean(o.pu),nOpen:o.po.length,nCto:o.pc.length,
+  wOpen:o.es?o.op/o.es:0,wCto:o.op?o.uc/o.op:0,wCtr:o.es?o.uc/o.es:0};}
+function mailAgg(D,idx){const{M}=D,o={es:0,op:0,uc:0,ms:0,n:idx.length,po:[],pc:[],pu:[]};
+  idx.forEach(i=>{o.es+=M.es[i];o.op+=M.op[i];o.uc+=M.uc[i];o.ms+=M.ms[i];
+    if(M.po[i]!=null)o.po.push(M.po[i]);if(M.pc[i]!=null)o.pc.push(M.pc[i]);if(M.pu[i]!=null)o.pu.push(M.pu[i]);});
+  return aggOf(o);}
+const TAGDIM={th:1,tp:1};
+function groupMail(D,idx,dim){const{M,DIM}=D,g={};
+  const add=(k,i)=>{const o=g[k]=g[k]||{es:0,op:0,uc:0,ms:0,n:0,po:[],pc:[],pu:[]};
+    o.es+=M.es[i];o.op+=M.op[i];o.uc+=M.uc[i];o.ms+=M.ms[i];o.n++;
+    if(M.po[i]!=null)o.po.push(M.po[i]);if(M.pc[i]!=null)o.pc.push(M.pc[i]);if(M.pu[i]!=null)o.pu.push(M.pu[i]);};
+  idx.forEach(i=>{if(dim==='month')return add(M.m[i],i);
+    if(TAGDIM[dim]){const l=M[dim][i];if(!l.length)add('(Untagged)',i);else l.forEach(t=>add(t,i));return;}
+    let k=DIM[dim][M.cols[dim][i]];if(!k&&(dim==='pk'))k='(No pack)';if(!k&&(dim==='tcl'||dim==='tid'))k='(No tracking ID)';add(k,i);});
+  return Object.entries(g).map(([l,v])=>({l,...aggOf(v)}));}
+const monthly=(D,idx,fn)=>{const g=groupMail(D,idx,'month');return MONTHS.map(m=>{const r=g.find(x=>+x.l===m);return r?fn(r):null;});};
+/* peer benchmark: median of the same content type × audience band, all mailings of the current year */
+const PEER=(()=>{const{M,N}=CUR.ml,g={};for(let i=0;i<N;i++){const k=M.cols.ct[i]+'|'+M.cols.cl[i],o=g[k]=g[k]||{o:[],c:[]};
+  if(M.po[i]!=null)o.o.push(M.po[i]);if(M.pc[i]!=null)o.c.push(M.pc[i]);}
+  const out={};for(const k in g)out[k]={o:median(g[k].o),c:median(g[k].c),n:g[k].o.length};return out;})();
+
+/* ==================== other datasets ==================== */
+const artsF=(arr,ig)=>{const f=S.ar,x=ig||{};return arr.filter(a=>inPer(a.m)&&(f.name==='all'||a.t===f.name)&&(f.au==='all'||a.au===f.au)&&
+  (f.ov==='all'||a.ov===f.ov)&&(x.th||f.th==='all'||a.th===f.th)&&(f.tp==='all'||a.tp.includes(f.tp))&&(f.ts==='all'||a.ts===f.ts)&&
+  (f.rg==='all'||a.rg===f.rg)&&(f.ch==='all'||a.ch===f.ch)&&(f.pk==='all'||(f.pk==='__blank__'?!a.pk:a.pk===f.pk))&&
+  (f.tcl==='all'||(f.tcl==='__blank__'?!a.tcl:a.tcl===f.tcl)));};
+const vidsF=(arr,ig)=>{const f=S.vd,q=(f.name||'').toLowerCase(),x=ig||{};
+  return arr.filter(v=>inPer(v.m)&&(x.div||f.div==='all'||v.div===f.div)&&(f.lang==='all'||v.lang===f.lang)&&(!q||v.t.toLowerCase().includes(q)));};
+function pgAttr(p){const f=S.pg;return(f.site==='all'||p.site===f.site)&&(f.div==='all'||p.div===f.div)&&(f.ct==='all'||p.ct===f.ct)&&
+  (f.th==='all'||p.th===f.th)&&(f.tp==='all'||p.tp.includes(f.tp))&&(f.org==='all'||p.org===f.org)&&(f.rg==='all'||p.rg===f.rg);}
+function pgAllowed(ig){ig=ig||{};let set=null;
+  if(!ig.vdiv&&S.pg.vdiv!=='all')set=new Set(DATA.pgDiv.filter(p=>p.sp===S.pg.vdiv).map(p=>p.url));
+  if(!ig.vreg&&S.pg.vreg!=='all'){const r=new Set(DATA.pgReg.filter(p=>p.sp===S.pg.vreg).map(p=>p.url));set=set?new Set([...set].filter(u=>r.has(u))):r;}
+  return set;}
+const pgLevelF=ig=>{const a=pgAllowed(ig);return DATA.pgLevel.filter(p=>pgAttr(p)&&(!a||a.has(p.url)));};
+const pgDivF=()=>{const a=pgAllowed({vdiv:1});return DATA.pgDiv.filter(p=>pgAttr(p)&&(!a||a.has(p.url)));};
+const pgRegF=()=>{const a=pgAllowed({vreg:1});return DATA.pgReg.filter(p=>pgAttr(p)&&(!a||a.has(p.url)));};
+function linksF(){const f=S.cl,lq=(f.link||'').toLowerCase(),dq=(f.dest||'').toLowerCase();
+  const sp=new Set(DATA.pages.filter(p=>f.site==='all'||p.site===f.site).map(p=>p.url));
+  return DATA.links.filter(l=>sp.has(l.url)&&(f.url==='all'||l.url===f.url)&&(!lq||l.t.toLowerCase().includes(lq))&&(!dq||l.dest.toLowerCase().includes(dq)));}
+function pagesF(ig){const f=S.cl;let P=DATA.pages.filter(p=>(f.site==='all'||p.site===f.site)&&((ig&&ig.url)||f.url==='all'||p.url===f.url));
+  if(f.link||f.dest){const ok=new Set(linksF().map(l=>l.url));P=P.filter(p=>ok.has(p.url));}return P;}
+
+/* ==================== filters: period + up to 3 primary + "More filters" drawer + chips ==================== */
+const vv=v=>[v,v];
+const FDEF={
+  'ml.cc':{l:'Corp Comms scope',o:()=>uniq(CUR.ml.DIM.cc).map(vv)},
+  'ml.div':{l:'Division',o:()=>uniq(CUR.ml.DIM.div).map(vv)},
+  'ml.ct':{l:'Content type',o:()=>uniq(CUR.ml.DIM.ct).map(vv)},
+  'ml.cl':{l:'Audience size',o:()=>uniq(CUR.ml.DIM.cl).map(vv)},
+  'ml.th':{l:'Theme',hint:'any match',o:()=>uniqTags(CUR.ml.M.th).map(vv)},
+  'ml.tp':{l:'Topic',hint:'any match',o:()=>uniqTags(CUR.ml.M.tp).map(vv)},
+  'ml.tm':{l:'Template',o:()=>uniq(CUR.ml.DIM.tm).map(vv)},
+  'ml.pk':{l:'Pack',o:()=>uniq(CUR.ml.DIM.pk).map(vv),blank:'(No pack)'},
+  'ml.tcl':{l:'Tracking ID cluster',o:()=>uniq(CUR.ml.DIM.tcl).map(vv),blank:'(No tracking ID)'},
+  'ml.tid':{l:'Tracking ID',search:'Search tracking ID…'},
+  'ar.th':{l:'Theme',o:()=>uniq(DATA.arts.map(a=>a.th)).map(vv)},
+  'ar.ch':{l:'News channel',o:()=>uniq(DATA.arts.map(a=>a.ch)).map(vv)},
+  'ar.ts':{l:'Top story',o:()=>[['Yes','Top stories only']]},
+  'ar.au':{l:'Author',o:()=>uniq(DATA.arts.map(a=>a.au)).map(vv)},
+  'ar.ov':{l:'Overtitle',o:()=>uniq(DATA.arts.map(a=>a.ov)).map(vv)},
+  'ar.tp':{l:'Topic tag',hint:'any match',o:()=>uniqTags(DATA.arts.map(a=>a.tp)).map(vv)},
+  'ar.rg':{l:'Region (personalisation)',o:()=>uniq(DATA.arts.map(a=>a.rg)).map(vv)},
+  'ar.pk':{l:'Pack',o:()=>uniq(DATA.arts.map(a=>a.pk)).map(vv),blank:'(No pack)'},
+  'ar.tcl':{l:'Tracking ID cluster',o:()=>uniq(DATA.arts.map(a=>a.tcl)).map(vv),blank:'(No tracking ID)'},
+  'ar.name':{l:'Article',o:()=>uniq(DATA.arts.map(a=>a.t)).map(vv)},
+  'vd.div':{l:'Owner',o:()=>uniq(DATA.vids.map(v=>v.div)).map(vv)},
+  'vd.lang':{l:'Language',o:()=>uniq(DATA.vids.map(v=>v.lang)).map(vv)},
+  'vd.name':{l:'Video name',search:'Search video name…'},
+  'pg.site':{l:'Site',o:()=>uniq(DATA.pgLevel.map(p=>p.site)).map(vv)},
+  'pg.vdiv':{l:'Visitor division',o:()=>uniq(DATA.pgDiv.map(p=>p.sp)).map(vv)},
+  'pg.vreg':{l:'Visitor region',o:()=>uniq(DATA.pgReg.map(p=>p.sp)).map(vv)},
+  'pg.div':{l:'Owning division',o:()=>uniq(DATA.pgLevel.map(p=>p.div)).map(vv)},
+  'pg.ct':{l:'Content type',o:()=>uniq(DATA.pgLevel.map(p=>p.ct)).map(vv)},
+  'pg.th':{l:'Theme',o:()=>uniq(DATA.pgLevel.map(p=>p.th)).map(vv)},
+  'pg.tp':{l:'Topic tag',hint:'any match',o:()=>uniqTags(DATA.pgLevel.map(p=>p.tp)).map(vv)},
+  'pg.org':{l:'Target organisation',o:()=>uniq(DATA.pgLevel.map(p=>p.org)).map(vv)},
+  'pg.rg':{l:'Target region',o:()=>uniq(DATA.pgLevel.map(p=>p.rg)).map(vv)},
+  'cl.site':{l:'Site',o:()=>uniq(DATA.pages.map(p=>p.site)).map(vv)},
+  'cl.url':{l:'Page',o:()=>DATA.pages.slice().sort((a,b)=>a.p.localeCompare(b.p)).map(p=>[p.url,p.p])},
+  'cl.dest':{l:'Destination contains',search:'e.g. learning…'},
+  'cl.link':{l:'Link title contains',search:'Search link title…'}};
+const FSPEC={summary:{ns:null,p:[],m:[]},
+  email:{ns:'ml',p:['div','ct','cl'],m:['cc','th','tp','tm','pk','tcl','tid']},
+  explore:{ns:'ml',p:['div','ct','cl'],m:['cc','th','tp','tm','pk','tcl','tid']},
+  articles:{ns:'ar',p:['th','ch','ts'],m:['au','ov','tp','rg','pk','tcl','name']},
+  video:{ns:'vd',p:['div','lang'],m:['name']},
+  pages:{ns:'pg',p:['site','vdiv','vreg'],m:['div','ct','th','tp','org','rg']},
+  clicks:{ns:'cl',p:['site','url'],m:['dest','link']}};
+const DATED={summary:1,email:1,explore:1,articles:1,video:1};
+const isOn=(ns,k)=>{const v=S[ns][k];return v!=null&&v!==''&&v!=='all';};
+function ctlHtml(ns,k,compact){const d=FDEF[ns+'.'+k],id=`f_${ns}_${k}`,v=S[ns][k];
+  const lab=`${esc(d.l)}${d.hint&&!compact?` <span style="font-weight:400;color:var(--grey-4)">(${esc(d.hint)})</span>`:''}`;
+  if(d.search)return`<div class="${compact?'fctl':'fgroup'}"><label for="${id}">${lab}</label><input type="search" id="${id}" data-ns="${ns}" data-k="${k}" placeholder="${esc(d.search)}" value="${esc(v)}"></div>`;
+  const opts=d.o().map(([a,b])=>`<option value="${esc(a)}"${String(a)===String(v)?' selected':''}>${esc(b)}</option>`).join('');
+  return`<div class="${compact?'fctl':'fgroup'}"><label for="${id}">${lab}</label><select id="${id}" data-ns="${ns}" data-k="${k}"><option value="all">All</option>${d.blank?`<option value="__blank__"${v==='__blank__'?' selected':''}>${esc(d.blank)}</option>`:''}${opts}</select></div>`;}
+function wireCtl(root){root.querySelectorAll('select[data-ns]').forEach(s=>s.addEventListener('change',e=>{S[e.target.dataset.ns][e.target.dataset.k]=e.target.value;S.more={};sync();}));
+  root.querySelectorAll('input[data-ns]').forEach(i=>i.addEventListener('input',e=>{clearTimeout(window._sq);
+    window._sq=setTimeout(()=>{S[e.target.dataset.ns][e.target.dataset.k]=e.target.value;buildChips();render();},250);}));}
+function buildBar(){const sp=FSPEC[S.tab],dated=DATED[S.tab];
+  const popts=[['ytd',`Year to date`]].concat(uniq(MONTHS.map(m=>Math.ceil(m/3))).map(q=>['q'+q,`Q${q}`])).concat(MONTHS.map(m=>['m'+m,`${MN[m]}${m===PARTIAL?' (partial)':''}`]));
+  let h=`<div class="fctl per"><label for="fPer">Period</label><select id="fPer"${dated?'':' disabled'}>${popts.map(([v,l])=>`<option value="${v}"${v===S.period?' selected':''}>${l} ${Y}</option>`).join('')}</select></div>`;
+  h+=`<div class="fctl"><div class="cmpnote">${dated?(PY?`Compared with the same period ${PY}`:'No prior-year data loaded'):'This export has no dates &mdash; figures are period totals'}</div></div>`;
+  if(sp.ns)h+=sp.p.map(k=>ctlHtml(sp.ns,k,true)).join('');
+  h+='<div class="fsp"></div>';
+  if(sp.ns&&sp.m.length){const n=sp.m.filter(k=>isOn(sp.ns,k)).length;h+=`<button class="btn" id="bMore">More filters${n?`<b>${n}</b>`:''}</button>`;}
+  $('#fbar').innerHTML=h;
+  $('#fPer').addEventListener('change',e=>{S.period=e.target.value;S.more={};sync();});
+  wireCtl($('#fbar'));
+  $('#bMore')&&$('#bMore').addEventListener('click',()=>openDrawer('filters'));
+  buildChips();}
+function buildChips(){const sp=FSPEC[S.tab];if(!sp.ns){$('#chips').innerHTML='';return;}
+  const on=[...sp.p,...sp.m].filter(k=>isOn(sp.ns,k));
+  if(!on.length){$('#chips').innerHTML='';return;}
+  $('#chips').innerHTML='Filtered by '+on.map(k=>{const d=FDEF[sp.ns+'.'+k],v=S[sp.ns][k];
+    const txt=v==='__blank__'?d.blank:(d.search?`“${v}”`:(k==='url'?pageTitle(v):v));
+    return`<span class="chip">${esc(d.l)}: <b>${esc(trunc(txt,40))}</b><button data-k="${k}" aria-label="Remove filter">&times;</button></span>`;}).join('')+
+    ' <button class="lnk" id="bClear">Clear all</button>';
+  $$('#chips .chip button').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;S[sp.ns][k]=FDEF[sp.ns+'.'+k].search?'':'all';S.more={};sync();}));
+  $('#bClear').addEventListener('click',()=>{[...sp.p,...sp.m].forEach(k=>S[sp.ns][k]=FDEF[sp.ns+'.'+k].search?'':'all');S.more={};sync();});}
+function toggleF(ns,k,v){S[ns][k]=S[ns][k]===v?'all':v;S.more={};sync();}
+function sync(){buildBar();if(S.drawer)renderDrawer();render();}
+
+/* ==================== drawer ==================== */
+function openDrawer(mode){S.drawer=mode;renderDrawer();$('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');}
+function closeDrawer(){S.drawer=null;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true');}
+const NAMES={summary:'Summary',email:'Email',articles:'Articles',pages:'Pages',video:'Video',clicks:'Link clicks',explore:'Explore'};
+function renderDrawer(){const d=$('#drawer');
+  if(S.drawer==='filters'){const sp=FSPEC[S.tab];
+    d.innerHTML=`<div class="dh"><h2>More filters</h2><button id="dX" aria-label="Close">&times;</button></div>
+      <div class="ds" style="border-top:0;padding-top:0"><p>${esc(NAMES[S.tab])} &middot; applied as you choose. Active filters show as chips under the filter bar.</p></div>
+      <div class="ds">${sp.ns?sp.m.map(k=>ctlHtml(sp.ns,k,false)).join(''):'<p>No further filters on this tab.</p>'}</div>`;
+    wireCtl(d);}
+  else{d.innerHTML=`<div class="dh"><h2>Method &amp; data quality</h2><button id="dX" aria-label="Close">&times;</button></div>${methodHtml()}`;wireMethod();}
+  $('#dX').addEventListener('click',closeDrawer);}
+const chk=rows=>`<div class="chk">${rows.map(([l,v,ok])=>`<div><span>${ok!=null?`<i class="rag ${ok?'ok':'warn'}"></i>`:''}${l}</span><b>${v}</b></div>`).join('')}</div>`;
+function methodHtml(){const t=S.tab;let h=`<div class="ds" style="border-top:0;padding-top:0"><p>Tab: <b>${esc(NAMES[t])}</b> &middot; ${esc(DATED[t]?periodLabel():'undated export')}</p></div>`;
+  if(t==='summary'||t==='email'||t==='explore'){const D=CUR.ml,idx=mailIdx(D,t==='summary'?ML0:S.ml),a=mailAgg(D,idx);
+    h+=`<div class="ds"><h5>Rate method</h5><div class="radio">
+      <label><input type="radio" name="meth" value="w"${S.method==='w'?' checked':''}><span><b>Volume-weighted</b> (recommended) &mdash; all opens &divide; all emails sent. The share of the audience that actually opened. Matches the workbook's Dashboard sheet.</span></label>
+      <label><input type="radio" name="meth" value="s"${S.method==='s'?' checked':''}><span><b>Simple average</b> &mdash; mean of the per-mailing % columns. Reconciles row by row with the file, but many tiny mailings can push it up.</span></label></div>
+      <div class="mrow"><div><div class="t1">Weighted</div><div class="v1">${pct(a.wOpen)} open &middot; ${pct(a.wCto)} CTO</div></div><div><div class="t1">Simple average</div><div class="v1">${pct(a.open)} open &middot; ${pct(a.cto)} CTO</div></div></div>
+      <p>Click-through (share of all recipients who clicked): weighted ${pct(a.wCtr,2)} = open rate &times; click-to-open exactly. The simple-average click-through (${pct(a.ctr,2)}) is averaged per mailing, so it does <b>not</b> equal ${pct(a.open)} &times; ${pct(a.cto)}.</p></div>
+      <div class="ds"><h5>Scope checks</h5>${chk([['Mailings in scope',`${full(idx.length)} / ${full(D.N)}`],
+        ['Blank open % (skipped in simple average)',full(a.n-a.nOpen),a.n===a.nOpen],['Blank CTO % (skipped in simple average)',full(a.n-a.nCto),a.n===a.nCto],
+        ['Prior-year mailings loaded',PRV?full(PRV.ml.N):'none',!!PRV]])}</div>
+      <div class="ds"><h5>Benchmarks</h5><p><b>vs ${PY||'prior year'}</b>: same filters, same months of the prior year. Changes under ±0.3 pp count as steady.</p>
+      <p><b>vs peers</b>: each mailing against the median of mailings with the same content type and audience size band this year (${Object.keys(PEER).length} peer groups).</p></div>`;}
+  if(t==='articles'){const A=artsF(CUR.arts);
+    h+=`<div class="ds"><h5>Why there is no total for unique visitors</h5><p>Unique visitors can't be added across articles: someone who reads three articles would count three times. They're shown per article and used for reach, never summed. A de-duplicated total would have to come from the source platform.</p></div>
+      <div class="ds"><h5>Reach</h5><p>Reach = unique visitors &divide; internal headcount (Geduld) of the <b>publishing month</b>. Articles without a headcount for their month show “—”.</p>
+<p>v2 measured the “best reach” KPI against a separately chosen reference month, so the same article could show two different reach figures on one screen. v3 always uses the publishing month.</p></div>
+      <div class="ds"><h5>Scope checks</h5>${chk([['Articles in scope',`${full(A.length)} / ${full(DATA.arts.length)}`],['Sum of unique visitors','suppressed — not additive',false],['Prior-year articles loaded',PRV?full(PRV.arts.length):'none',!!PRV]])}</div>`;}
+  if(t==='video'){const V=vidsF(CUR.vids);
+    h+=`<div class="ds"><h5>Definitions</h5><p><b>Completion rate</b> = views reaching 100% &divide; started views (views reaching 1%), matching the workbook.</p>
+      <p><b>Engagement score</b> is the platform's composite of watch depth and completion. Higher is better; it isn't a percentage. Compare videos with each other, not with other channels.</p></div>
+      <div class="ds"><h5>Scope checks</h5>${chk([['Videos in scope',`${full(V.length)} / ${full(DATA.vids.length)}`],['Tracking ID / pack','not in the video export',false],['Published after the data cut-off (excluded)',full(DATA.vids.filter(x=>x.m>CUTOFF).length),!DATA.vids.some(x=>x.m>CUTOFF)],['Prior-year videos loaded',PRV?full(PRV.vids.length):'none',!!PRV]])}</div>`;}
+  if(t==='pages'){const P=pgLevelF(),pv=sum(P,x=>x.v),cv=sum(DATA.pages,x=>x.v);
+    h+=`<div class="ds"><h5>Period basis</h5><p>The page-level export is a period total without dates, so the period filter and year-on-year comparison don't apply. YTD columns are kept in the CSV export.</p>
+      <p>Visitor division and region filters restrict every view on the tab to pages visited by that audience.</p></div>
+      <div class="ds"><h5>Reconciliation with Link clicks</h5><p>Pages uses the page-level export (${full(DATA.pgLevel.length)} pages, ${fmt(sum(DATA.pgLevel,x=>x.v))} views). Link clicks uses the click-tracking export (${full(DATA.pages.length)} pages, ${fmt(cv)} views). They cover different page sets, so totals differ by design.</p></div>
+      <div class="ds"><h5>Scope checks</h5>${chk([['Pages in scope',`${full(P.length)} / ${full(DATA.pgLevel.length)}`],['Views in scope',fmt(pv)],['Division split rows',full(pgDivF().length)],['Region split rows',full(pgRegF().length)]])}</div>`;}
+  if(t==='clicks'){const P=pagesF(),L=linksF();
+    h+=`<div class="ds"><h5>Definitions (formerly CTVR / UCTUVR)</h5><p><b>Click rate per view</b> = clicks &divide; page views (was CTVR). How much clicking the page generates overall.</p>
+      <p><b>Visitors who clicked</b> = unique clickers &divide; unique visitors (was UCTUVR). The share of people who acted at least once.</p>
+      <p>When clicks per view is far above visitors who clicked, a smaller group is clicking repeatedly.</p></div>
+      <div class="ds"><h5>Period basis</h5><p>Click tracking is a cumulative export with no date dimension, so the period filter and year-on-year comparison don't apply.</p></div>
+      <div class="ds"><h5>Scope checks</h5>${chk([['Pages in scope',`${full(P.length)} / ${full(DATA.pages.length)}`],['Links in scope',`${full(L.length)} / ${full(DATA.links.length)}`],['Downloads on destination links',sum(L,x=>x.d)?full(sum(L,x=>x.d)):'all zero — column hidden',!!sum(L,x=>x.d)]])}</div>`;}
+  if(t==='summary')h+=`<div class="ds"><h5>Comparison basis</h5><p>Every change is against the same months of ${PY||'the prior year'}. ${PARTIAL?`${MN[PARTIAL]} is a partial month (data to ${AS_OF.getDate()} ${MN[PARTIAL]}); monthly charts shade it and sparklines leave it out.`:''}</p>
+    <p><b>Demo note:</b> the ${PY||'prior-year'} figures are synthetic. Production needs the ${PY||'prior-year'} email, article and video exports in the same schema.</p>
+    <p>Pages and Link clicks exports have no dates, so the Summary shows them without a comparison.</p></div>`;
+  h+=`<div class="ds"><h5>Export</h5><p>Download the rows behind this tab with the current filters.</p><button class="btn" id="bCsv">Export CSV</button></div>`;
+  return h;}
+function wireMethod(){$$('#drawer input[name=meth]').forEach(r=>r.addEventListener('change',e=>{S.method=e.target.value;render();renderDrawer();}));
+  $('#bCsv')&&$('#bCsv').addEventListener('click',exportCsv);}
+
+/* ==================== shared bits ==================== */
+function trendBlocks(){const b=[],pm=perMonths();
+  if(S.period!=='ytd'&&pm.length){b.push({i0:MONTHS.indexOf(pm[0]),i1:MONTHS.indexOf(pm[pm.length-1]),label:'Selected'});}
+  if(PARTIAL&&MONTHS.includes(PARTIAL)&&!(S.period!=='ytd'&&pm.includes(PARTIAL)))b.push({i0:MONTHS.indexOf(PARTIAL),i1:MONTHS.indexOf(PARTIAL),label:'Partial'});
+  return b;}
+const legendHtml=(cur,prev)=>`<span><i></i>${cur}</span>${PRV?`<span><i class="prev"></i>${prev}</span>`:''}${PARTIAL?'<span><i class="blk"></i>Partial month</span>':''}`;
+const sparkMonths=()=>{const pm=perMonths().filter(m=>m!==PARTIAL);return pm.length>=3?pm:null;};
+const sparkOf=(curByM,prevByM)=>{const sm=sparkMonths();if(!sm)return'';const pick=a=>sm.map(m=>a?a[MONTHS.indexOf(m)]:null);return sparkSvg(pick(curByM),prevByM?pick(prevByM):null);};
+const cats=()=>MONTHS.map(m=>MN[m]);
+function go(tab,patch){if(patch)for(const ns in patch)Object.assign(S[ns],patch[ns]);activate(tab);}
+
+/* ==================== SUMMARY ==================== */
+function renderSummary(){
+  $('#smScope').textContent=`${periodLabel()}${PY?' · compared with the same period '+PY:''}`;
+  const D=CUR.ml,idx=mailIdx(D,ML0),a=mailAgg(D,idx),pidx=PRV?mailIdx(PRV.ml,ML0):null,pa=PRV?mailAgg(PRV.ml,pidx):null;
+  const allC=mailIdx(D,ML0,{period:1}),allP=PRV?mailIdx(PRV.ml,ML0,{period:1}):null;
+  const mO=monthly(D,allC,r=>R(r,'open')),pO=PRV?monthly(PRV.ml,allP,r=>R(r,'open')):null;
+  const mC=monthly(D,allC,r=>R(r,'cto')),pC=PRV?monthly(PRV.ml,allP,r=>R(r,'cto')):null;
+  const mE=monthly(D,allC,r=>r.es),pE=PRV?monthly(PRV.ml,allP,r=>r.es):null;
+  const A=CUR.arts.filter(x=>inPer(x.m)),PA=PRV?PRV.arts.filter(x=>inPer(x.m)):null;
+  const V=CUR.vids.filter(x=>inPer(x.m)),PV=PRV?PRV.vids.filter(x=>inPer(x.m)):null;
+  const comp=X=>{const c1=sum(X,x=>x.c1);return c1?sum(X,x=>x.c100)/c1:null;};
+  const byM=(X,f)=>MONTHS.map(m=>{const s=X.filter(x=>x.m===m);return s.length?f(s):null;});
+  kpis('smKpi',[
+    {l:'Email open rate',v:pct(R(a,'open')),d:dHtml(dRate(R(a,'open'),R(pa,'open'))),s:`${methodLbl()} · ${full(a.ms)} mailings`,hl:true,spark:sparkOf(mO,pO)},
+    {l:'Click-to-open',v:pct(R(a,'cto')),d:dHtml(dRate(R(a,'cto'),R(pa,'cto'))),s:'of openers clicked a link',spark:sparkOf(mC,pC)},
+    {l:'Emails sent',v:fmt(a.es),d:dHtml(dCount(a.es,pa&&pa.es),{neutral:true}),s:'volume, not a success measure',spark:sparkOf(mE,pE)},
+    {l:'Article views',v:fmt(sum(A,x=>x.v)),d:dHtml(dCount(sum(A,x=>x.v),PA&&sum(PA,x=>x.v))),s:`${full(A.length)} articles published`,
+      spark:sparkOf(byM(CUR.arts,s=>sum(s,x=>x.v)),PRV?byM(PRV.arts,s=>sum(s,x=>x.v)):null)},
+    {l:'Video completion',v:pct(comp(V)),d:dHtml(dRate(comp(V),PV&&comp(PV))),s:'of started views reached the end',
+      spark:sparkOf(byM(CUR.vids,comp),PRV?byM(PRV.vids,comp):null)}]);
+  /* what changed */
+  const sig=[];
+  if(PRV){const gc=groupMail(D,idx,'ct'),gp=groupMail(PRV.ml,pidx,'ct');
+    const mv=gc.filter(r=>r.ms>=25).map(r=>{const p=gp.find(x=>x.l===r.l);return p&&p.ms>=25?{l:r.l,c:R(r,'cto'),d:R(r,'cto')-R(p,'cto'),n:r.ms}:null;})
+      .filter(Boolean).sort((x,y)=>Math.abs(y.d)-Math.abs(x.d))[0];
+    if(mv&&Math.abs(mv.d)>=0.003)sig.push({k:'Email',t:`<b>${esc(mv.l)}</b> click-to-open ${mv.d>0?'rose':'fell'} ${Math.abs(mv.d*100).toFixed(1)} pp to ${pct(mv.c)} (${full(mv.n)} mailings). The largest change of any content type.`,
+      go:()=>go('email',{ml:{...ML0,ct:mv.l}}),cta:'See in Email'});
+    const bc=groupMail(D,idx,'cl'),bp=groupMail(PRV.ml,pidx,'cl');
+    const bm=bc.filter(r=>r.ms>=25).map(r=>{const p=bp.find(x=>x.l===r.l);return p&&p.ms>=25?{l:r.l,o:R(r,'open'),d:R(r,'open')-R(p,'open'),n:r.ms}:null;})
+      .filter(Boolean).sort((x,y)=>x.d-y.d)[0];
+    if(bm&&bm.d<-0.003)sig.push({k:'Email',t:`Audiences of <b>${esc(bm.l.replace(/^[A-E] /,''))}</b> people opened ${Math.abs(bm.d*100).toFixed(1)} pp less than in ${PY} (${pct(bm.o)}). The weakest audience band this year.`,
+      go:()=>go('email',{ml:{...ML0,cl:bm.l}}),cta:'See in Email'});}
+  {const{M,DIM}=D;let best=null;idx.forEach(i=>{if(M.es[i]<500||M.po[i]==null)return;const pr=PEER[M.cols.ct[i]+'|'+M.cols.cl[i]];if(!pr||pr.n<10)return;
+      const d=M.po[i]-pr.o;if(!best||d>best.d)best={i,d};});
+    if(best){const i=best.i;sig.push({k:'Email',t:`Best against its peers: <b>${esc(M.t[i])}</b> opened at ${pct(M.po[i])}, ${(best.d*100).toFixed(1)} pp above similar ${esc(DIM.ct[M.cols.ct[i]].toLowerCase())} mailings to the same audience size.`,
+      go:()=>{S.emSort='bestO';go('email',{ml:{...ML0}});},cta:'See in Email'});}}
+  if(V.length){const st=[['start',sum(V,x=>x.c1)],['25%',sum(V,x=>x.c25)],['50%',sum(V,x=>x.c50)],['75%',sum(V,x=>x.c75)],['end',sum(V,x=>x.c100)]];
+    const c1=st[0][1]||1;let big=null;for(let i=1;i<st.length;i++){const d=(st[i-1][1]-st[i][1])/c1;if(!big||d>big.d)big={d,from:st[i-1][0],to:st[i][0]};}
+    const dc=PV?dRate(comp(V),comp(PV)):null;
+    sig.push({k:'Video',t:`${pct(big.d,0)} of viewers leave between the ${big.from} and the ${big.to} mark, the steepest drop in the curve. Completion is ${pct(comp(V))}${dc?` (${dTxt(dc)})`:''}.`,go:()=>go('video'),cta:'See in Video'});}
+  $('#smSig').innerHTML=sig.slice(0,4).map((x,i)=>`<li><span class="k">${x.k}</span><span>${x.t}</span><button class="lnk" data-i="${i}">${x.cta} &rarr;</button></li>`).join('')||'<li>No notable changes in this period.</li>';
+  $$('#smSig .lnk').forEach(b=>b.addEventListener('click',()=>sig[+b.dataset.i].go()));
+  $('#smTrendSub').textContent=`${methodLbl()} · all months ${Y}${PY?' vs '+PY:''}`;
+  lineChart('cSmTrend',cats(),[{name:String(Y),v:mO,cls:'cur'}].concat(PRV?[{name:String(PY),v:pO,cls:'prev'}]:[]),{fmt:v=>pct(v),fmtAxis:pctAx,blocks:trendBlocks(),h:220,minSpan:0.1});
+  $('#smLeg').innerHTML=legendHtml(Y,PY);
+  /* channels: one metric each, no cross-channel bars */
+  const P=DATA.pgLevel,C=DATA.pages,uv=sum(C,x=>x.uv),ucl=sum(C,x=>x.ucl);
+  const ch=[
+    {n:'Email',m:'Click-to-open',v:pct(R(a,'cto')),d:dHtml(dRate(R(a,'cto'),R(pa,'cto'))),t:'email'},
+    {n:'Articles',m:'Median views per article',v:full(median(A.map(x=>x.v))||0),d:dHtml(dCount(median(A.map(x=>x.v)),PA&&median(PA.map(x=>x.v)))),t:'articles'},
+    {n:'Pages',m:'Unique visitors (period total)',v:fmt(sum(P,x=>x.uv)),d:dHtml(null,{na:'Not dated — no comparison'}),t:'pages'},
+    {n:'Video',m:'Completion rate',v:pct(comp(V)),d:dHtml(dRate(comp(V),PV&&comp(PV))),t:'video'},
+    {n:'Link clicks',m:'Visitors who clicked',v:pct(uv?ucl/uv:0),d:dHtml(null,{na:'Cumulative — no comparison'}),t:'clicks'}];
+  $('#smChan').innerHTML=ch.map(c=>`<div><div class="cn">${c.n}</div><div class="cm">${c.m}</div><div class="cv">${c.v}</div><div class="cd">${c.d}</div><button class="lnk" data-t="${c.t}">Open ${c.n} &rarr;</button></div>`).join('');
+  $$('#smChan .lnk').forEach(b=>b.addEventListener('click',()=>go(b.dataset.t)));}
+
+/* ==================== EMAIL ==================== */
+function emailVerdict(a,pa){const o=R(a,'open'),c=R(a,'cto');
+  const st=(d,t)=>d==null?null:d>t?1:d<-t?-1:0;
+  const dO=pa&&pa.n?o-R(pa,'open'):null,dC=pa&&pa.n?c-R(pa,'cto'):null,sO=st(dO,0.003),sC=st(dC,0.003);
+  let verdict,cls='',line;
+  if(sO==null||sC==null){const hi=o>=0.75,lo=o<0.6;verdict=lo?'Attention problem':hi?'Strong opens':'Steady';cls=lo?'bad':hi?'good':'';line='no prior-year comparison available for this selection';}
+  else{const T={'1,1':['Improving on both','good','more people opened and more of them clicked'],'1,0':['More opens','good','attention is up, action is holding'],
+    '0,1':['More clicks','good','the content is converting better'],'0,0':['Steady','','no meaningful change on either measure'],
+    '1,-1':['Opened, not acted on','warn','more people open, but fewer click. Check the call to action'],'-1,1':['Fewer opens, more action','warn','a smaller audience is opening, but it acts more'],
+    '0,-1':['Clicks slipping','warn','people open as before but click less'],'-1,0':['Opens slipping','warn','fewer people open. Look at subject lines, senders and mailing frequency'],
+    '-1,-1':['Slipping on both','bad','fewer opens and fewer clicks than last year']}[sO+','+sC];
+    [verdict,cls,line]=T;}
+  const inTen=Math.round(o*10),oneIn=c?Math.round(1/c):0;
+  const text=`<b>${pct(o)}</b> opened${dO!=null?` (${dTxt(dRate(o,o-dO))})`:''} and <b>${pct(c)}</b> of openers clicked${dC!=null?` (${dTxt(dRate(c,c-dC))})`:''}: ${line}.`;
+  const why=`<div class="cmp"><div><div class="m-l">Open rate</div><div class="m-v">${pct(o)}</div><div class="m-q">“Of the people we sent to, how many opened?”</div><div class="m-f">Did the message earn attention? · ${methodLbl()}</div></div>
+    <div><div class="m-l">Click-to-open</div><div class="m-v">${pct(c)}</div><div class="m-q">“Of the people who opened, how many clicked?”</div><div class="m-f">Did the content earn action? · ${methodLbl()}</div></div></div>
+    <ul><li><b>Read them together.</b> A mailing can succeed on one and fail on the other. Announcements and FYI mails often have low click-to-open by design.</li>
+    <li><b>Judge a mailing within its class.</b> A 70% open rate to 130,000 people is a different achievement from 70% to 13. Use the peer comparison below.</li>
+    <li><b>Click-through</b> (share of all recipients who clicked) is ${pct(R(a,'ctr'),2)}${S.method==='w'?' = open rate × click-to-open':'. Under the simple average it is averaged per mailing, so it does not equal open × click-to-open'}.</li>
+    <li><b>Verdict basis:</b> same filters and months in ${PY||'the prior year'}; changes under ±0.3 pp count as steady.</li></ul>
+    <div class="rep"><b>How to report it</b>“${inTen} in 10 opened, and 1 in ${oneIn||'–'} of those clicked through${dO!=null?`, ${dO>=0?'up':'down'} ${Math.abs(dO*100).toFixed(1)} points on opens versus ${PY}`:''}.”</div>`;
+  return{verdict,cls,text,why};}
+function renderEmail(){const D=CUR.ml,f=S.ml,idx=mailIdx(D,f),a=mailAgg(D,idx);
+  const pidx=PRV?mailIdx(PRV.ml,f):null,pa=PRV?mailAgg(PRV.ml,pidx):null;
+  $('#emScope').textContent=periodLabel()+(PY?` · vs same period ${PY}`:'');
+  const allC=mailIdx(D,f,{period:1}),allP=PRV?mailIdx(PRV.ml,f,{period:1}):null;
+  const mO=monthly(D,allC,r=>R(r,'open')),pO=PRV?monthly(PRV.ml,allP,r=>R(r,'open')):null;
+  const mC=monthly(D,allC,r=>R(r,'cto')),pC=PRV?monthly(PRV.ml,allP,r=>R(r,'cto')):null;
+  kpis('emKpi',[
+    {l:'Open rate',v:pct(R(a,'open')),d:dHtml(dRate(R(a,'open'),R(pa,'open'))),s:methodLbl(),hl:true,spark:sparkOf(mO,pO)},
+    {l:'Click-to-open',v:pct(R(a,'cto')),d:dHtml(dRate(R(a,'cto'),R(pa,'cto'))),s:methodLbl(),spark:sparkOf(mC,pC)},
+    {l:'Emails sent',v:fmt(a.es),d:dHtml(dCount(a.es,pa&&pa.es),{neutral:true}),s:`avg ${fmt(a.ms?a.es/a.ms:0)} recipients per mailing`},
+    {l:'Mailings',v:full(a.ms),d:dHtml(dCount(a.ms,pa&&pa.ms),{neutral:true}),s:`${full(idx.length)} records`}]);
+  if(!idx.length){$('#emVerdict').innerHTML='<div class="vline"><div class="vt">No mailings match the current filters.</div></div>';}
+  else verdictLine('emVerdict',emailVerdict(a,pa));
+  $('#emTrendSub').textContent=`${methodLbl()} · all months, current filters${PY?' · '+Y+' vs '+PY:''}`;
+  const blocks=trendBlocks(),pf=v=>pct(v),pf0=pctAx;
+  lineChart('cEmOpen',cats(),[{name:String(Y),v:mO,cls:'cur'}].concat(PRV?[{name:String(PY),v:pO,cls:'prev'}]:[]),{fmt:pf,fmtAxis:pf0,blocks,h:190,mr:40,minSpan:0.1});
+  lineChart('cEmCto',cats(),[{name:String(Y),v:mC,cls:'cur'}].concat(PRV?[{name:String(PY),v:pC,cls:'prev'}]:[]),{fmt:pf,fmtAxis:pf0,blocks,h:190,mr:40,minSpan:0.1});
+  $('#emLeg').innerHTML=legendHtml(Y,PY);
+  const idxNoCt=mailIdx(D,f,{ct:1}),aN=mailAgg(D,idxNoCt);
+  hBar('cEmCt',groupMail(D,idxNoCt,'ct').filter(r=>r.ms>=10&&R(r,'cto')!=null).sort((x,y)=>R(y,'cto')-R(x,'cto'))
+    .map(r=>({l:r.l,v:R(r,'cto'),n:r.ms,note:`open ${pct(R(r,'open'))} · ${fmt(r.es)} emails`})),
+    {fmt:v=>pct(v),labelW:190,avg:R(aN,'cto'),sel:f.ct!=='all'?f.ct:null,onClick:r=>toggleF('ml','ct',r.l)});
+  /* peer table */
+  const{M,DIM}=D;
+  let rows=idx.filter(i=>M.es[i]>=50&&M.po[i]!=null).map(i=>{const pr=PEER[M.cols.ct[i]+'|'+M.cols.cl[i]]||{};
+    return{t:M.t[i],div:DIM.div[M.cols.div[i]],ct:DIM.ct[M.cols.ct[i]],cl:DIM.cl[M.cols.cl[i]],m:M.m[i],es:M.es[i],o:M.po[i],c:M.pc[i],
+      dO:pr.o!=null?M.po[i]-pr.o:null,dC:pr.c!=null&&M.pc[i]!=null?M.pc[i]-pr.c:null};});
+  const SORTS={bestO:['Best opens vs peers',(x,y)=>(y.dO??-9)-(x.dO??-9)],worstO:['Weakest opens vs peers',(x,y)=>(x.dO??9)-(y.dO??9)],
+    bestC:['Best clicks vs peers',(x,y)=>(y.dC??-9)-(x.dC??-9)],size:['Largest audience',(x,y)=>y.es-x.es]};
+  rows.sort(SORTS[S.emSort][1]);
+  $('#emSeg').innerHTML=Object.entries(SORTS).map(([k,[l]])=>`<button class="${k===S.emSort?'on':''}" data-k="${k}">${l}</button>`).join('');
+  $$('#emSeg button').forEach(b=>b.addEventListener('click',()=>{S.emSort=b.dataset.k;renderEmail();}));
+  const dpp=d=>d==null?'—':`<span class="dl ${Math.abs(d)<0.005?'flat':d>0?'up':'down'}">${d>0?'+':''}${(d*100).toFixed(1)} pp</span>`;
+  table('tEm',[{h:'Mailing',cls:'t',f:r=>`${esc(r.t)}<span class="s">${esc(r.div)} · ${MN[r.m]}</span>`},{h:'Type',f:r=>`<span class="tag">${esc(r.ct)}</span>`},
+    {h:'Audience band',f:r=>esc(r.cl)},{h:'Emails',num:1,f:r=>full(r.es)},{h:'Open',num:1,f:r=>pct(r.o)},{h:'vs peers',num:1,f:r=>dpp(r.dO)},
+    {h:'Click-to-open',num:1,f:r=>pct(r.c)},{h:'vs peers',num:1,f:r=>dpp(r.dC)}],rows,{noteId:'emTblNote',moreId:'emMore'});
+  /* more breakdowns */
+  const idxNoCl=mailIdx(D,f,{cl:1}),bc=groupMail(D,idxNoCl,'cl').sort((x,y)=>x.l.localeCompare(y.l)),bp=PRV?groupMail(PRV.ml,mailIdx(PRV.ml,f,{cl:1}),'cl'):[];
+  $('#tEmBand').innerHTML='<thead><tr><th>Band</th><th class="num">Mailings</th><th class="num">Open</th><th class="num">vs '+(PY||'PY')+'</th><th class="num">CTO</th></tr></thead><tbody>'+
+    bc.map(r=>{const p=bp.find(x=>x.l===r.l),d=p?dRate(R(r,'open'),R(p,'open')):null;
+      return`<tr style="cursor:pointer" data-l="${esc(r.l)}"><td>${f.cl===r.l?'<b>':''}${esc(r.l)}${f.cl===r.l?'</b>':''}</td><td class="num">${full(r.ms)}</td><td class="num">${pct(R(r,'open'))}</td><td class="num">${d?dHtml(d).replace(/<span class="vs">.*?<\/span>/,''):'—'}</td><td class="num">${pct(R(r,'cto'))}</td></tr>`;}).join('')+'</tbody>';
+  $$('#tEmBand tbody tr').forEach(tr=>tr.addEventListener('click',()=>toggleF('ml','cl',tr.dataset.l)));
+  hBar('cEmPack',groupMail(D,idx,'pk').filter(r=>r.l!=='(No pack)'&&r.ms>=3&&R(r,'cto')!=null).sort((x,y)=>R(y,'cto')-R(x,'cto'))
+    .map(r=>({l:r.l,v:R(r,'cto'),n:r.ms})),{fmt:v=>pct(v),labelW:170,limit:8,avg:R(a,'cto')});
+  const idxNoDiv=mailIdx(D,f,{div:1});
+  hBar('cEmDiv',groupMail(D,idxNoDiv,'div').sort((x,y)=>y.es-x.es).map(r=>({l:r.l,v:r.es,n:r.ms,note:`open ${pct(R(r,'open'))}`})),
+    {labelW:150,limit:8,sel:f.div!=='all'?f.div:null,onClick:r=>toggleF('ml','div',r.l)});}
+
+/* ==================== ARTICLES ==================== */
+const hcOf=m=>DATA.hcGeduld[`${Y}-${String(m).padStart(2,'0')}`]||0;
+function renderArticles(){const A=artsF(CUR.arts),PA=PRV?artsF(PRV.arts):null,v=sum(A,x=>x.v),pv=PA?sum(PA,x=>x.v):null;
+  $('#arScope').textContent=periodLabel()+(PY?` · vs same period ${PY}`:'');
+  const med=median(A.map(x=>x.v)),pmed=PA?median(PA.map(x=>x.v)):null;
+  /* reach always against the publishing month's headcount — same basis as the table and the verdict */
+  const reach=a=>{const h=hcOf(a.m);return h?a.uv/h:null;},best=A.filter(a=>reach(a)!=null).sort((x,y)=>reach(y)-reach(x))[0];
+  const byM=(X,f)=>MONTHS.map(m=>{const s=X.filter(x=>x.m===m);return s.length?f(s):null;});
+  const fAll=arr=>{const keep=S.period;S.period='ytd';const r=artsF(arr);S.period=keep;return r;};
+  const cM=byM(fAll(CUR.arts),s=>sum(s,x=>x.v)),pM=PRV?byM(fAll(PRV.arts),s=>sum(s,x=>x.v)):null;
+  kpis('arKpi',[
+    {l:'Article views',v:fmt(v),d:dHtml(dCount(v,pv)),s:'all articles in scope',hl:true,spark:sparkOf(cM,pM)},
+    {l:'Median views per article',v:full(med||0),d:dHtml(dCount(med,pmed)),s:'the typical article, not the average'},
+    {l:'Articles published',v:full(A.length),d:dHtml(dCount(A.length,PA&&PA.length),{neutral:true}),s:'in scope'},
+    {l:'Best reach',v:best?pct(reach(best),1):'n/a',d:'',s:best?trunc(best.t,34):'—',info:'Unique visitors of the best-reaching article ÷ internal headcount of its publishing month.'}]);
+  if(!A.length){$('#arVerdict').innerHTML='<div class="vline"><div class="vt">No articles match the current filters.</div></div>';}
+  else{const d=dCount(v,pv),dm=dCount(med,pmed),top=A.slice().sort((x,y)=>y.v-x.v)[0],th=hcOf(top.m);
+    const sv=dm?(dm.v>5?1:dm.v<-5?-1:0):null;
+    verdictLine('arVerdict',{verdict:sv==null?'No comparison':sv>0?'More reach per article':sv<0?'Less reach per article':'Steady',cls:sv>0?'good':sv<0?'warn':'',
+      text:`<b>${fmt(v)}</b> views from ${full(A.length)} articles${d?` (${dTxt(d)})`:''}. The typical article drew <b>${full(med)}</b> views${dm?` (${dTxt(dm)})`:''}. Most read: <b>${esc(trunc(top.t,60))}</b> with ${fmt(top.v)} views, reaching ${th?pct(top.uv/th):'n/a'} of headcount.`,
+      why:`<ul><li><b>Total views</b> rise with the number of articles published. <b>Median views per article</b> shows whether each article works harder, so the verdict uses the median.</li>
+        <li><b>Reach</b> = unique visitors ÷ internal headcount of the publishing month. Unique visitors are never added up across articles; see Method &amp; data quality.</li>
+        <li>Themes are ranked by the median, so one viral article can't carry a whole theme.</li></ul>
+        <div class="rep"><b>How to report it</b>“The typical article reached ${full(med)} readers${dm?`, ${dm.v>=0?'up':'down'} ${Math.abs(dm.v).toFixed(0)}% on ${PY}`:''}; the top story reached ${th?pct(top.uv/th,0):'n/a'} of all employees.”</div>`});}
+  $('#arTrendSub').textContent=`Total views of articles published each month · all months, current filters${PY?' · '+Y+' vs '+PY:''}`;
+  lineChart('cArTrend',cats(),[{name:String(Y),v:cM,cls:'cur'}].concat(PRV?[{name:String(PY),v:pM,cls:'prev'}]:[]),{zero:true,blocks:trendBlocks(),h:210});
+  $('#arLeg').innerHTML=legendHtml(Y,PY);
+  const medBy=(X,key,min=1)=>{const g={};X.forEach(a=>{(Array.isArray(a[key])?(a[key].length?a[key]:['(Untagged)']):[a[key]]).forEach(k=>(g[k]=g[k]||[]).push(a.uv));});
+    return Object.entries(g).filter(([,l])=>l.length>=min).map(([l,a])=>({l,v:median(a),n:a.length})).sort((x,y)=>y.v-x.v);};
+  const An=artsF(CUR.arts,{th:1});
+  hBar('cArTheme',medBy(An,'th'),{fmt:full,labelW:170,avg:median(An.map(x=>x.uv)),sel:S.ar.th!=='all'?S.ar.th:null,onClick:r=>toggleF('ar','th',r.l)});
+  const rows=A.slice().sort((x,y)=>y.v-x.v);
+  table('tAr',[{h:'Article',cls:'t',f:r=>`${esc(r.t)}${r.ts==='Yes'?' <span class="tag top">Top story</span>':''}<span class="s">${esc(r.ch)}</span>`},
+    {h:'Published',f:r=>esc(r.ds)},{h:'Theme',f:r=>esc(r.th)},{h:'Views',num:1,f:r=>full(r.v)},{h:'Unique visitors',num:1,f:r=>full(r.uv)},
+    {h:'Reach',num:1,f:r=>{const h=hcOf(r.m);return h?pct(r.uv/h,1):'—';}},{h:'Reactions',num:1,f:r=>full(r.li+r.co)}],rows,{noteId:'arTblNote',moreId:'arMore'});
+  hBar('cArTopic',medBy(A,'tp',2),{fmt:full,labelW:190,limit:8});
+  hBar('cArChan',medBy(A,'ch',3),{fmt:full,labelW:200,limit:8});
+  hBar('cArAuthor',medBy(A,'au',3),{fmt:full,labelW:150,limit:8});}
+
+/* ==================== PAGES ==================== */
+function renderPages(){const P=pgLevelF(),uv=sum(P,x=>x.uv),v=sum(P,x=>x.v),vis=sum(P,x=>x.vis);
+  $('#pgScope').textContent='Period total · page-level export without dates';
+  const na='';/* the filter bar already says this export has no dates */
+  kpis('pgKpi',[{l:'Unique visitors',v:fmt(uv),d:na,s:'summed per page',hl:true},{l:'Views',v:fmt(v),d:na,s:`${fmt(vis)} visits`},
+    {l:'Views per visitor',v:(uv?v/uv:0).toFixed(1),d:na,s:'how often people come back'},{l:'Pages',v:full(P.length),d:na,s:`of ${full(DATA.pgLevel.length)} tracked`}]);
+  const D=pgDivF(),byDiv={};D.forEach(p=>byDiv[p.sp]=(byDiv[p.sp]||0)+p.uv);
+  const topP=P.slice().sort((a,b)=>b.uv-a.uv)[0],dv=Object.entries(byDiv).sort((a,b)=>b[1]-a[1])[0],dt=sum(Object.values(byDiv),x=>x);
+  if(topP)verdictLine('pgVerdict',{verdict:'Period total',text:`<b>${esc(pageTitle(topP.url))}</b> draws ${pct(uv?topP.uv/uv:0,0)} of all unique visitors${dv?`; <b>${esc(dv[0])}</b> makes up ${pct(dt?dv[1]/dt:0,0)} of the audience`:''}. On average people view each page ${(uv?v/uv:0).toFixed(1)} times.`,
+    why:`<ul><li>This export has no dates, so there is no period filter or year-on-year comparison. Figures cover the whole export period.</li><li>Unique visitors are summed per page, so a person who visited two pages counts twice in the total.</li><li>Views per visitor above 2 means people come back to the page, typical of hubs and tool pages.</li></ul>`});
+  else $('#pgVerdict').innerHTML='<div class="vline"><div class="vt">No pages match the current filters.</div></div>';
+  hBar('cPgTop',P.slice().sort((a,b)=>b.uv-a.uv).map(p=>({l:pageTitle(p.url),v:p.uv,note:`${p.site} · ${fmt(p.v)} views · ${(p.uv?p.v/p.uv:0).toFixed(1)} views per visitor`})),{labelW:200});
+  const grp=(rows)=>{const g={};rows.forEach(p=>g[p.sp]=(g[p.sp]||0)+p.uv);return Object.entries(g).map(([l,v])=>({l,v})).sort((a,b)=>b.v-a.v);};
+  hBar('cPgDiv',grp(D),{labelW:200,sel:S.pg.vdiv!=='all'?S.pg.vdiv:null,onClick:r=>toggleF('pg','vdiv',r.l)});
+  hBar('cPgReg',grp(pgRegF()),{labelW:130,sel:S.pg.vreg!=='all'?S.pg.vreg:null,onClick:r=>toggleF('pg','vreg',r.l)});
+  const byF=k=>{const g={};P.forEach(p=>{const o=g[p[k]]=g[p[k]]||{uv:0,n:0};o.uv+=p.uv;o.n++;});return Object.entries(g).map(([l,o])=>({l,v:o.uv/o.n,n:o.n})).sort((a,b)=>b.v-a.v);};
+  hBar('cPgTheme',byF('th'),{fmt:full,labelW:150,limit:8});hBar('cPgCt',byF('ct'),{fmt:full,labelW:150,limit:8});
+  table('tPg',[{h:'Page',cls:'t',f:r=>`${esc(pageTitle(r.url))}<span class="s">${esc(r.site)}</span>`},{h:'Theme',f:r=>esc(r.th)},{h:'Content type',f:r=>esc(r.ct)},
+    {h:'Unique visitors',num:1,f:r=>full(r.uv)},{h:'Views',num:1,f:r=>full(r.v)},{h:'Views per visitor',num:1,f:r=>(r.uv?r.v/r.uv:0).toFixed(1)+'×'}],
+    P.slice().sort((a,b)=>b.uv-a.uv),{noteId:'pgTblNote',moreId:'pgMore'});}
+
+/* ==================== VIDEO ==================== */
+function renderVideo(){const V=vidsF(CUR.vids),PV=PRV?vidsF(PRV.vids):null;
+  $('#vdScope').textContent=periodLabel()+(PY?` · vs same period ${PY}`:'');
+  const c1=sum(V,x=>x.c1),c100=sum(V,x=>x.c100),comp=c1?c100/c1:null,pc1=PV?sum(PV,x=>x.c1):0,pcomp=pc1?sum(PV,x=>x.c100)/pc1:null;
+  const eng=V.length?mean(V.map(x=>x.eng)):null,peng=PV&&PV.length?mean(PV.map(x=>x.eng)):null,views=sum(V,x=>x.v),pviews=PV?sum(PV,x=>x.v):null;
+  const fAll=arr=>{const k=S.period;S.period='ytd';const r=vidsF(arr);S.period=k;return r;};
+  const byM=(X,f)=>MONTHS.map(m=>{const s=X.filter(x=>x.m===m);return s.length?f(s):null;});
+  const compF=s=>{const a=sum(s,x=>x.c1);return a?sum(s,x=>x.c100)/a:null;};
+  const VA=fAll(CUR.vids),PVA=PRV?fAll(PRV.vids):null;
+  kpis('vdKpi',[
+    {l:'Completion rate',v:pct(comp),d:dHtml(dRate(comp,pcomp)),s:'of started views reached the end',hl:true,spark:sparkOf(byM(VA,compF),PVA?byM(PVA,compF):null)},
+    {l:'Views',v:fmt(views),d:dHtml(dCount(views,pviews)),s:`${full(V.length)} videos`,spark:sparkOf(byM(VA,s=>sum(s,x=>x.v)),PVA?byM(PVA,s=>sum(s,x=>x.v)):null)},
+    {l:'Engagement score',v:eng==null?'n/a':eng.toFixed(1),d:dHtml(dPts(eng,peng)),s:'platform score, higher is better',info:'The platform\'s composite of watch depth and completion. Not a percentage. Compare videos with each other, not with other channels.'},
+    {l:'Videos published',v:full(V.length),d:dHtml(dCount(V.length,PV&&PV.length),{neutral:true}),s:'in scope'}]);
+  if(!V.length){$('#vdVerdict').innerHTML='<div class="vline"><div class="vt">No videos match the current filters.</div></div>';}
+  else{const st=[['start',c1],['25%',sum(V,x=>x.c25)],['50%',sum(V,x=>x.c50)],['75%',sum(V,x=>x.c75)],['end',c100]];
+    let big=null;for(let i=1;i<st.length;i++){const d=(st[i-1][1]-st[i][1])/(c1||1);if(!big||d>big.d)big={d,from:st[i-1][0],to:st[i][0]};}
+    const dc=dRate(comp,pcomp),s=dc?(dc.v>0.3?1:dc.v<-0.3?-1:0):null,best=V.slice().sort((a,b)=>b.eng-a.eng)[0];
+    verdictLine('vdVerdict',{verdict:s==null?'No comparison':s>0?'Holding attention better':s<0?'Losing viewers earlier':'Steady',cls:s>0?'good':s<0?'warn':'',
+      text:`<b>${pct(comp)}</b> of started views reached the end${dc?` (${dTxt(dc)})`:''}. The steepest drop is between the ${big.from} and the ${big.to} mark: <b>${pct(big.d,0)}</b> of viewers leave there.`,
+      why:`<ul><li><b>Completion</b> is measured against started views (views reaching 1%), matching the workbook.</li>
+        <li><b>What to do:</b> if most viewers leave early, put the key message in the opening seconds. If they leave late, the video is probably too long.</li>
+        <li><b>Engagement score</b> (${eng.toFixed(1)}) is the platform's composite of watch depth and completion. Use it to compare videos, not channels.</li></ul>
+        ${best?`<div class="rep"><b>Best performer in scope</b>${esc(trunc(best.t,90))}: score ${best.eng.toFixed(1)}, ${pct(best.c1?best.c100/best.c1:0,0)} completion</div>`:''}`});}
+  const base=c1||1;
+  hBar('cVdFunnel',[['Started',c1],['25% watched',sum(V,x=>x.c25)],['50% watched',sum(V,x=>x.c50)],['75% watched',sum(V,x=>x.c75)],['Completed',c100]]
+    .map(([l,x])=>({l,v:x/base,note:`${fmt(x)} views`})),{fmt:x=>pct(x,0),rowH:30,labelW:120});
+  $('#vdTrendSub').textContent=`Views of videos published each month · all months, current filters${PY?' · '+Y+' vs '+PY:''}`;
+  lineChart('cVdTrend',cats(),[{name:String(Y),v:byM(VA,s=>sum(s,x=>x.v)),cls:'cur'}].concat(PVA?[{name:String(PY),v:byM(PVA,s=>sum(s,x=>x.v)),cls:'prev'}]:[]),{zero:true,blocks:trendBlocks(),h:190});
+  $('#vdLeg').innerHTML=legendHtml(Y,PY);
+  table('tVd',[{h:'Video',cls:'t',f:r=>`${esc(r.t)}<span class="s">${esc(r.div)} · ${esc(r.lang)}</span>`},{h:'Published',f:r=>MN[r.m]},
+    {h:'Views',num:1,f:r=>full(r.v)},{h:'Started',num:1,f:r=>full(r.c1)},{h:'Completion',num:1,f:r=>pct(r.c1?r.c100/r.c1:0,0)},{h:'Engagement',num:1,f:r=>(r.eng||0).toFixed(1)}],
+    V.slice().sort((a,b)=>b.v-a.v),{noteId:'vdTblNote',moreId:'vdMore'});
+  const Vn=vidsF(CUR.vids,{div:1}),d={};Vn.forEach(x=>{const o=d[x.div]=d[x.div]||{c1:0,c:0,n:0,e:0};o.c1+=x.c1;o.c+=x.c100;o.n++;o.e+=x.eng;});
+  const ow=Object.entries(d).filter(([,o])=>o.n>=5);
+  hBar('cVdDiv',ow.map(([l,o])=>({l,v:o.c1?o.c/o.c1:0,n:o.n})).sort((a,b)=>b.v-a.v),{fmt:x=>pct(x,0),labelW:190,sel:S.vd.div!=='all'?S.vd.div:null,onClick:r=>toggleF('vd','div',r.l)});
+  hBar('cVdEng',ow.map(([l,o])=>({l,v:o.e/o.n,n:o.n})).sort((a,b)=>b.v-a.v),{fmt:x=>x.toFixed(1),labelW:190});}
+
+/* ==================== LINK CLICKS ==================== */
+function renderClicks(){const P=pagesF(),L=linksF();
+  const v=sum(P,x=>x.v),uv=sum(P,x=>x.uv),c=sum(P,x=>x.c),ucl=sum(P,x=>x.ucl),cr=v?c/v:0,vc=uv?ucl/uv:0;
+  $('#clScope').textContent='Cumulative export without dates';
+  const na='';
+  kpis('clKpi',[{l:'Visitors who clicked',v:pct(vc),d:na,s:`${fmt(ucl)} of ${fmt(uv)} visitors`,hl:true,info:'Unique clickers ÷ unique visitors (formerly UCTUVR).'},
+    {l:'Click rate per view',v:pct(cr),d:na,s:`${fmt(c)} clicks on ${fmt(v)} views`,info:'Clicks ÷ page views (formerly CTVR).'},
+    {l:'Clicks per clicker',v:(ucl?c/ucl:0).toFixed(1),d:na,s:'repeat clicking'},{l:'Page views',v:fmt(v),d:na,s:`${full(P.length)} pages`}]);
+  if(!P.length||!uv){$('#clVerdict').innerHTML='<div class="vline"><div class="vt">No pages match the current filters.</div></div>';}
+  else{const rel=vc?Math.abs(cr-vc)/vc:0,per=ucl?c/ucl:0;let verdict,text;
+    if(rel<0.1){verdict='Balanced';text=`About <b>${Math.round(vc*10)} in 10</b> visitors clicked, roughly once each: a simple, direct journey.`;}
+    else if(cr>vc){verdict='Explorers';text=`<b>${pct(vc,0)}</b> of visitors clicked, but those who did clicked <b>${per.toFixed(1)} times</b> each: people are using these pages as a hub.`;}
+    else{verdict='One-time action';text=`<b>${pct(vc,0)}</b> of visitors clicked, mostly once: these pages serve one specific need.`;}
+    verdictLine('clVerdict',{verdict,text,why:`<ul><li><b>Visitors who clicked</b> shows how many people acted. <b>Click rate per view</b> shows how much clicking the page generates overall. Read them together.</li>
+      <li><b>Explorers</b> (click rate well above visitors who clicked) is typical of resource hubs, release notes and download pages. <b>One-time action</b> is typical of forms, registrations and tools.</li>
+      <li>This export is cumulative and has no dates, so there is no period filter or comparison.</li></ul>
+      <div class="rep"><b>How to report it</b>“${Math.round(vc*10)} in 10 visitors clicked at least once, ${per.toFixed(1)} times on average.”</div>`});}
+  hBar('cClPages',pagesF({url:1}).sort((a,b)=>b.v-a.v).map(p=>({l:p.p,v:p.v,note:`${p.site} · visitors who clicked ${pct(p.uv?p.ucl/p.uv:0)}`})),
+    {labelW:170,sel:S.cl.url!=='all'?(DATA.pages.find(p=>p.url===S.cl.url)||{}).p:null,onClick:r=>{const p=DATA.pages.find(x=>x.p===r.l);if(p)toggleF('cl','url',p.url);}});
+  hBar('cClLinks',L.slice().sort((a,b)=>b.c-a.c).map(l=>({l:l.t,v:l.c,note:`${shortUrl(l.dest)} · ${full(l.ucl)} unique clickers · from ${l.p}`})),{labelW:190});
+  const hasD=P.some(p=>p.d>0);
+  table('tCl',[{h:'Page',cls:'t',f:r=>`${esc(r.p)}<span class="s">${esc(r.site)}</span>`},{h:'Views',num:1,f:r=>full(r.v)},{h:'Unique visitors',num:1,f:r=>full(r.uv)},
+    {h:'Clicks',num:1,f:r=>full(r.c)},{h:'Click rate per view',num:1,f:r=>pct(r.v?r.c/r.v:0)},{h:'Visitors who clicked',num:1,f:r=>pct(r.uv?r.ucl/r.uv:0)}]
+    .concat(hasD?[{h:'Downloads',num:1,f:r=>full(r.d)}]:[]),P.slice().sort((a,b)=>b.v-a.v),{noteId:'clTblNote',moreId:'clMore'});}
+
+/* ==================== EXPLORE ==================== */
+function renderExplore(){const D=CUR.ml,dim=$('#exDim').value,metric=$('#exMetric').value,top=+$('#exTop').value,min=+$('#exMin').value;
+  const idx=mailIdx(D,S.ml),g=groupMail(D,idx,dim).filter(r=>r.ms>=min),isRate=['open','cto','ctr'].includes(metric),val=r=>isRate?R(r,metric):r[metric];
+  const rows=g.filter(r=>val(r)!=null).sort((a,b)=>dim==='month'?(+a.l)-(+b.l):val(b)-val(a)).slice(0,top);
+  hBar('cEx',rows.map(r=>({l:dim==='month'?MN[+r.l]:r.l,v:val(r),n:r.ms,note:`${fmt(r.es)} emails`})),
+    {limit:top,fmt:isRate?(v=>pct(v)):fmt,rowH:24,labelW:250,avg:isRate?R(mailAgg(D,idx),metric):null});
+  $('#exNote').innerHTML=(TAGDIM[dim]?`Any-match: a mailing with several ${dim==='th'?'themes':'topics'} counts under each, so rows add up to more than ${full(idx.length)} mailings. `:'')+
+    (dim==='div'?'Division uses Corp Comms KPI reporting; rows without a KPI value split into “Non Corp Comms” and “Corp Comms – unmapped”. ':'')+
+    (isRate?`Rates are ${methodLbl()}. `:'')+(min>1?`Groups with fewer than ${min} mailings are hidden.`:'');
+  $('#tEx').innerHTML=`<thead><tr><th>${esc($('#exDim').selectedOptions[0].text)}</th><th class="num">Mailings</th><th class="num">Emails</th><th class="num">Avg audience</th><th class="num">Open</th><th class="num">Click-to-open</th><th class="num">Click-through</th><th class="num">Unique clicks</th></tr></thead><tbody>`+
+    g.slice().sort((a,b)=>dim==='month'?(+a.l)-(+b.l):b.es-a.es).map(r=>`<tr><td class="t" title="${esc(r.l)}">${esc(trunc(dim==='month'?MN[+r.l]:r.l,52))}</td><td class="num">${full(r.ms)}</td><td class="num">${full(r.es)}</td>
+    <td class="num">${fmt(r.ms?r.es/r.ms:0)}</td><td class="num">${pct(R(r,'open'))}</td><td class="num">${pct(R(r,'cto'))}</td><td class="num">${pct(R(r,'ctr'),2)}</td><td class="num">${full(r.uc)}</td></tr>`).join('')+'</tbody>';}
+
+/* ==================== export ==================== */
+function csv(rows){const blob=new Blob([rows.map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='comms_'+S.tab+'_export.csv';a.click();}
+function exportCsv(){const t=S.tab;
+  if(t==='articles')csv([['article','published','author','theme','topic_tags','channel','pack','views','unique_visitors','likes','comments']].concat(artsF(CUR.arts).map(a=>[a.t,a.ds,a.au,a.th,a.tp.join('; '),a.ch,a.pk,a.v,a.uv,a.li,a.co])));
+  else if(t==='video')csv([['video','owner','language','month','views','started_views','completions','engagement']].concat(vidsF(CUR.vids).map(v=>[v.t,v.div,v.lang,MN[v.m],v.v,v.c1,v.c100,v.eng])));
+  else if(t==='clicks')csv([['site','page','page_url','views','unique_visitors','clicks','unique_clicks','downloads']].concat(pagesF().map(p=>[p.site,p.p,p.url,p.v,p.uv,p.c,p.ucl,p.d])));
+  else if(t==='pages')csv([['site','page','url','division_owner','content_type','theme','unique_visitors','visits','views','uv_ytd','views_ytd']].concat(pgLevelF().map(p=>[p.site,pageTitle(p.url),p.url,p.div,p.ct,p.th,p.uv,p.vis,p.v,p.uvy,p.vy])));
+  else{const dim=t==='explore'?$('#exDim').value:'div';
+    csv([['dimension','mailings','emails_sent','opens','unique_clicks','open_rate_weighted_pct','cto_weighted_pct','open_rate_simple_avg_pct','cto_simple_avg_pct']]
+      .concat(groupMail(CUR.ml,mailIdx(CUR.ml,t==='summary'?ML0:S.ml),dim).map(r=>[r.l,r.ms,r.es,r.op,r.uc,(r.wOpen*100).toFixed(2),(r.wCto*100).toFixed(2),
+        r.open==null?'':(r.open*100).toFixed(2),r.cto==null?'':(r.cto*100).toFixed(2)])));}}
+
+/* ==================== boot ==================== */
+const RENDER={summary:renderSummary,email:renderEmail,articles:renderArticles,pages:renderPages,video:renderVideo,clicks:renderClicks,explore:renderExplore};
+function render(){RENDER[S.tab]();if(S.drawer==='method')renderDrawer();}
+function activate(tab){if(!RENDER[tab])return;S.tab=tab;S.more={};
+  $$('.tab').forEach(x=>x.classList.toggle('active',x.dataset.p===tab));$$('.panel').forEach(p=>p.classList.toggle('active',p.id==='p-'+tab));
+  if(S.drawer==='filters')closeDrawer();buildBar();render();window.scrollTo(0,0);}
+function init(){
+  $('#hAsOf').textContent=AS_OF?`${AS_OF.getDate()} ${MN[AS_OF.getMonth()+1]} ${AS_OF.getFullYear()}`:'—';$('#hPy').textContent=PY||'—';
+  $('#exDim').innerHTML=[['div','Division (KPI reporting)'],['map','Corp Comms new mapping'],['team','Corp Comms team'],['ct','Content type'],
+    ['th','Theme (any match)'],['tp','Topic (any match)'],['tm','Template'],['cl','Audience size'],['cc','Corp Comms scope'],['month','Month'],
+    ['pk','Tracking ID pack'],['tcl','Tracking ID cluster']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  $('#exMetric').innerHTML=[['cto','Click-to-open'],['open','Open rate'],['ctr','Click-through'],['es','Emails sent'],['ms','Mailings sent'],['uc','Unique clicks']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  ['#exDim','#exMetric','#exTop','#exMin'].forEach(s=>$(s).addEventListener('change',renderExplore));
+  $('#bMethod').addEventListener('click',()=>S.drawer==='method'?closeDrawer():openDrawer('method'));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+  $$('.tab').forEach(t=>t.addEventListener('click',()=>activate(t.dataset.p)));
+  window.addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(render,200);});
+  /* compare.html drives the tab via postMessage; #tab in the URL works too */
+  window.addEventListener('message',e=>{if(e.data&&e.data.tab)activate(e.data.tab);});
+  const h=location.hash.slice(1);activate(RENDER[h]?h:'summary');}
+init();
+</script>
+</body>
+</html>

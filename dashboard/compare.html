@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Redesign Compare</title>
+<style>
+:root{--primary:#E60000;--black:#000;--white:#fff;--grey-1:#CCCABC;--grey-4:#7A7870;--grey-5:#5A5D5C;--grey-6:#404040;--bg:#F7F7F5;--surface:#ECEBE4;
+  --font-sans:"Frutiger 45 Light","Frutiger","Helvetica Neue",Helvetica,Arial,"Segoe UI",Roboto,system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--black);display:flex;flex-direction:column;font-size:14px}
+button{font-family:inherit}
+.bar{background:var(--white);border-bottom:1px solid var(--grey-1);padding:10px 20px 0;display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.bar h1{margin:0 8px 10px 0;font-size:20px;font-weight:300}
+.tabs{display:flex;gap:2px}
+.tab{border:0;background:none;padding:8px 12px 7px;font-size:14px;color:var(--grey-5);cursor:pointer;border-bottom:3px solid transparent}
+.tab:hover{color:var(--black)}.tab.on{color:var(--black);font-weight:600;border-bottom-color:var(--primary)}
+.tab small{display:block;font-size:10.5px;color:var(--grey-4);font-weight:400}
+.sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--grey-6);margin-bottom:9px}
+.seg button{border:0;border-left:1px solid var(--grey-6);background:var(--white);padding:5px 10px;font-size:12px;cursor:pointer}
+.seg button:first-child{border-left:0}.seg button.on{background:var(--grey-6);color:var(--white)}
+.notes{background:var(--white);border-bottom:1px solid var(--grey-1);padding:10px 20px 12px;font-size:12.5px}
+.notes.off{display:none}
+.notes h2{margin:0 0 6px;font-size:13px;font-weight:600}
+.notes ul{margin:0;padding-left:18px;columns:2;column-gap:36px}.notes li{margin-bottom:4px;break-inside:avoid}
+.cols{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+.cols.only-v3{grid-template-columns:0 1fr}.cols.only-v2{grid-template-columns:1fr 0}
+.col{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border-left:1px solid var(--grey-1)}
+.col:first-child{border-left:0}
+.lbl{padding:7px 14px;font-size:12.5px;background:var(--white);border-bottom:1px solid var(--grey-1)}.lbl b{font-weight:600}
+.lbl a{color:var(--grey-5);margin-left:8px;font-size:12px}
+.frame{flex:1;position:relative;overflow:hidden}
+.frame iframe{position:absolute;top:0;left:0;border:0;transform-origin:0 0;background:var(--white)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Redesign: before / after</h1>
+  <div class="tabs" id="tabs"></div>
+  <div class="sp"></div>
+  <div class="seg" id="notesSeg"><button class="on" data-v="1">Notes on</button><button data-v="0">Notes off</button></div>
+  <div class="seg" id="layout"><button class="on" data-v="both">Side by side</button><button data-v="only-v2">Before only</button><button data-v="only-v3">After only</button></div>
+</div>
+<div class="notes" id="notes"></div>
+<div class="cols" id="cols">
+  <div class="col"><div class="lbl"><b>Before</b> &middot; v2 layout, design-system colours <a href="comms-intelligence-dashboard-demo.html" target="_blank">open full size</a></div>
+    <div class="frame"><iframe id="f2" src="comms-intelligence-dashboard-demo.html" title="Current dashboard"></iframe></div></div>
+  <div class="col"><div class="lbl"><b>After</b> &middot; v3 mockup <a href="comms-intelligence-dashboard-v3-demo.html" target="_blank">open full size</a></div>
+    <div class="frame"><iframe id="f3" src="comms-intelligence-dashboard-v3-demo.html" title="Redesign mockup"></iframe></div></div>
+</div>
+<script>
+/* v3 tab → matching v2 tab */
+const TABS=[
+  {v3:'summary',v2:'overview',l:'Summary',was:'Overview',n:[
+    'New first tab for the head of comms: five headline numbers, each with the change against the same period last year and a monthly sparkline.',
+    'The red highlight moves from a volume (emails sent) to an outcome (open rate). Emails sent stays, with its change in neutral grey.',
+    '“What changed” replaces “Signals”: the largest movements only, each with a link that opens the right tab with the filter already set.',
+    'The channel scorecard (email opens and video views on one axis) becomes one fair measure per channel.',
+    'The 278px control panel is gone. Period sits in the top bar and carries across every tab that has dates.',
+    'Method notes and scope checks move to “Method & data quality” in the header.']},
+  {v3:'email',v2:'mailings',l:'Email',was:'Mailings · iMEP',n:[
+    'Six headline numbers become four, each with the change vs 2025. Method box and scope line move to the Method panel.',
+    'The long interpretation box becomes a verdict badge and one sentence. “Why, and how to report it” opens on demand. The verdict now uses the change vs last year, not fixed cut-offs.',
+    'Grouped bars of two rates on one axis become two small line charts: 2026 vs 2025, partial month shaded.',
+    'The league table sorted by audience size becomes a peer table: each mailing against the median of its content type and audience band. Toggle for best, weakest or largest.',
+    'Content-type bars show n and an average line, and clicking a bar filters the whole tab (chips show what is active).',
+    'Twelve sidebar filters become three in the bar plus “More filters”. The bubble chart becomes a table by audience band.',
+    'Rates default to volume-weighted (switchable). The click-through sentence is corrected.']},
+  {v3:'articles',v2:'articles',l:'Articles',was:'Articles · Intranet',n:[
+    'Views compared with 2025, plus median views per article: a fair per-article measure that doesn’t just grow with volume.',
+    'The yellow “unique visitors” warning moves into the Method panel. The headline area stays clean.',
+    'Themes are ranked by median, not average, with n on every bar, so one viral article can’t carry a theme.',
+    'Six charts become two charts and a table. Topics, channels and authors sit behind “More breakdowns”; the author chart is labelled as not like-for-like.']},
+  {v3:'pages',v2:'pages',l:'Pages',was:'Pages',n:[
+    '.aspx filenames become readable page titles in charts and tables.',
+    'The period filter is disabled and says why: this export has no dates.',
+    'Why Pages and Link clicks totals differ is explained in the Method panel.',
+    'Clicking a visitor-division bar filters every view on the tab.']},
+  {v3:'video',v2:'videos',l:'Video',was:'Videos',n:[
+    'Completion rate becomes the headline outcome, with the change vs 2025.',
+    'The drop-off curve moves first, because it carries the key insight. The verdict names the steepest drop.',
+    'The engagement score is explained in a tooltip instead of a long box.',
+    'Owner charts sit behind “More breakdowns”; clicking an owner filters the tab.']},
+  {v3:'clicks',v2:'clicks',l:'Link clicks',was:'Click tracking',n:[
+    'CTVR and UCTUVR are renamed “Click rate per view” and “Visitors who clicked”. The old names are kept in tooltips.',
+    'The full-URL destination table becomes a “most-clicked links” chart, with domains in the tooltip.',
+    'The Downloads column only appears when there are downloads.',
+    'Clicking a page bar focuses the tab on that page.']},
+  {v3:'explore',v2:'breakdown',l:'Explore',was:'Mailings breakdown',n:[
+    'A minimum-mailings threshold hides tiny groups. Every bar shows n and there is an average line.',
+    'Explore follows the Email filters and the rate method, so the numbers match the Email tab.']}];
+let cur=TABS[0];
+const f2=document.getElementById('f2'),f3=document.getElementById('f3');
+function send(){try{f2.contentWindow.postMessage({tab:cur.v2},'*');f3.contentWindow.postMessage({tab:cur.v3},'*');}catch(e){}}
+function renderTabs(){document.getElementById('tabs').innerHTML=TABS.map((t,i)=>`<button class="tab${t===cur?' on':''}" data-i="${i}">${t.l}<small>was ${t.was}</small></button>`).join('');
+  document.querySelectorAll('#tabs .tab').forEach(b=>b.addEventListener('click',()=>{cur=TABS[+b.dataset.i];renderTabs();send();}));
+  document.getElementById('notes').innerHTML=`<h2>What changed on this tab</h2><ul>${cur.n.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  fit();}
+/* render each dashboard at desktop width, then scale it to its column */
+const DESK=1440;
+function fit(){[f2,f3].forEach(f=>{const box=f.parentElement,w=box.clientWidth,h=box.clientHeight;if(!w)return;const s=Math.min(1,w/DESK);
+  f.style.width=DESK+'px';f.style.height=(h/s)+'px';f.style.transform=`scale(${s})`;});}
+[f2,f3].forEach(f=>f.addEventListener('load',()=>setTimeout(send,150)));
+document.querySelectorAll('#layout button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#layout button').forEach(x=>x.classList.toggle('on',x===b));
+  const c=document.getElementById('cols');c.className='cols'+(b.dataset.v==='both'?'':' '+b.dataset.v);fit();}));
+document.querySelectorAll('#notesSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#notesSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  document.getElementById('notes').classList.toggle('off',b.dataset.v==='0');fit();}));
+window.addEventListener('resize',fit);
+renderTabs();
+</script>
+</body>
+</html>

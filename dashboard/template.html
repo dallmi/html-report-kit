@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comms Intelligence Dashboard</title>
+<style>
+/* Tokens mirrored from Arbeit/00-design-system/corporate-design-system.css — do not retype hex values elsewhere */
+:root{
+  --primary:#E60000;--primary-dark:#8A000A;--white:#FFFFFF;--black:#000000;
+  --grey-1:#CCCABC;--grey-2:#B8B3A2;--grey-3:#8E8D83;--grey-4:#7A7870;--grey-5:#5A5D5C;--grey-6:#404040;
+  --bordeaux-1:#BD000C;--bordeaux-2:#8A000A;--bordeaux-3:#620004;
+  --bronze-1:#B98E2C;--bronze-2:#946F29;--bronze-3:#6C5312;
+  --bg:#F7F7F5;--surface:#ECEBE4;--surface-alt:#F5F0E1;--row-alt:#F8F7F2;
+  --success:#6F7A1A;--warning:#E4A911;--danger:#BD000C;--info:#0C7EC6;
+  --radius:2px;
+  --font-sans:"Frutiger 45 Light","Frutiger","Helvetica Neue",Helvetica,Arial,"Segoe UI",Roboto,system-ui,sans-serif;
+  /* dashboard roles */
+  --card:var(--white);--line:var(--grey-1);--line-soft:var(--surface);
+  --s1:var(--grey-6);   /* series 1 — every single-series bar */
+  --s2:var(--bronze-1); /* series 2 — small accent */
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--black);font-family:var(--font-sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.topbar{position:sticky;top:0;z-index:20;background:var(--white);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1480px;margin:0 auto;padding:16px 28px 8px;display:flex;gap:22px;align-items:flex-start}
+.brand h1{margin:0;font-size:28px;font-weight:300;letter-spacing:-.01em;line-height:1.15}
+.brand p{margin:4px 0 0;color:var(--grey-4);font-size:13px}
+.hmeta{margin-left:auto;text-align:right;font-size:12px;color:var(--grey-5);line-height:1.5}.hmeta b{color:var(--black);font-weight:600}
+.tabwrap{max-width:1480px;margin:0 auto;padding:0 28px;display:flex;gap:2px;overflow-x:auto}
+.tab{padding:11px 16px 9px;font-size:13.5px;color:var(--grey-5);cursor:pointer;border:0;background:none;border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit}
+.tab:hover{color:var(--black)}.tab.active{color:var(--black);border-bottom-color:var(--primary);font-weight:600}
+main{max-width:1480px;margin:0 auto;padding:22px 28px 48px;display:grid;grid-template-columns:278px minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:1080px){main{grid-template-columns:minmax(0,1fr)}aside{position:static!important}}
+aside{background:var(--card);border:1px solid var(--line-soft);position:sticky;top:calc(var(--topH,112px) + 16px)}
+.fhead{padding:13px 16px;border-bottom:1px solid var(--line-soft)}.fhead h2{margin:0;font-size:15px;font-weight:600}
+.fhead .ctx{font-size:12px;color:var(--grey-4);margin-top:2px}
+.fbody{padding:14px 16px 18px;max-height:calc(100vh - var(--topH,112px) - 96px);overflow-y:auto}
+.fgroup{margin-bottom:13px}.fgroup label{display:block;font-size:12px;color:var(--grey-5);margin-bottom:5px;font-weight:600}
+.fgroup label .hint{font-weight:400;color:var(--grey-4)}
+select,input[type=search]{width:100%;padding:7px 8px;border:1px solid var(--line);background:var(--white);font-family:inherit;font-size:13px;color:var(--black);border-radius:var(--radius)}
+select:focus,input:focus,.btn:focus-visible,.tab:focus-visible{outline:2px solid var(--grey-6);outline-offset:-2px}
+select:disabled{background:var(--bg);color:var(--grey-4);cursor:not-allowed}.fgroup.off label{color:var(--grey-4)}
+.na{font-size:11px;color:var(--grey-4);margin-top:3px;font-style:italic}
+.fsep{border-top:1px solid var(--line-soft);margin-top:16px;padding-top:14px}
+.btn{border:1px solid var(--grey-6);background:var(--white);color:var(--black);padding:7px 12px;font-family:inherit;font-size:12.5px;cursor:pointer;border-radius:var(--radius)}
+.btn:hover{background:var(--surface)}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:var(--white)}.btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark)}
+.btn-row{display:flex;gap:8px;margin-top:4px}
+.rowcount{font-size:11px;color:var(--grey-4);margin-top:10px}
+.scopebox{margin-top:16px;padding:12px;background:var(--bg);border-left:3px solid var(--grey-3);font-size:11.5px;color:var(--grey-5)}.scopebox b{color:var(--black)}
+.panel{display:none}.panel.active{display:block}
+.sect{margin-bottom:22px}
+.sect-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px;flex-wrap:wrap}.sect-h h3{margin:0;font-size:18px;font-weight:600}.sect-h span{font-size:12px;color:var(--grey-4)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+.kpi{background:var(--card);padding:12px 16px 13px;border-top:3px solid var(--card)}
+.kpi.hl{border-top-color:var(--primary)}
+.kpi .k-l{font-size:12px;color:var(--grey-5);font-weight:600}
+.kpi .k-v{font-size:28px;font-weight:300;letter-spacing:-.01em;margin-top:4px;line-height:1.1}
+.kpi .k-s{font-size:11.5px;color:var(--grey-4);margin-top:4px}
+.vbar{display:flex;gap:6px 20px;flex-wrap:wrap;font-size:11.5px;color:var(--grey-5);margin-top:10px;padding:8px 12px;background:var(--card);border:1px solid var(--line-soft)}
+.vbar b{color:var(--black);font-weight:600}
+.rag{display:inline-block;width:8px;height:8px;margin:0 5px 0 8px}.rag.ok{background:var(--success)}.rag.warn{background:var(--warning)}.rag.bad{background:var(--danger)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+@media(max-width:1180px){.grid2,.grid3{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line-soft);padding:16px 18px 18px;min-width:0}
+.card h4{margin:0 0 2px;font-size:15px;font-weight:600}.card .sub{font-size:12px;color:var(--grey-4);margin-bottom:12px}
+svg{display:block;width:100%;overflow:visible}
+.g-lbl{font-size:11.5px;fill:var(--grey-6)}.g-val{font-size:11.5px;fill:var(--black);font-weight:600}.g-ax{font-size:11px;fill:var(--grey-4)}
+.bar{fill:var(--s1)}.bar.s2{fill:var(--s2)}.bar.dim{fill:var(--grey-1)}
+.bar:hover{fill:var(--black)}.bar.s2:hover{fill:var(--bronze-2)}
+.axis{stroke:var(--black);stroke-width:1;shape-rendering:crispEdges}
+.lineS{fill:none;stroke:var(--s2);stroke-width:2}.lineHalo{fill:none;stroke:var(--white);stroke-width:5}
+.dot{fill:var(--s2);stroke:var(--white);stroke-width:1.5}
+.bub{fill:var(--surface);stroke:var(--grey-6);stroke-width:.75}.bub:hover{stroke:var(--black);stroke-width:1.5}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--grey-6);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px}.sw1{background:var(--s1)}.sw2{background:var(--s2)}
+.note{font-size:11.5px;color:var(--grey-4);margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+.scroll{max-height:520px;overflow:auto;border-top:1px solid var(--black);border-bottom:1px solid var(--black)}
+th{text-align:left;font-size:11.5px;font-weight:600;color:var(--black);padding:7px 8px 6px;white-space:nowrap;background:var(--white)}
+.scroll thead th{position:sticky;top:0;z-index:2;box-shadow:inset 0 -1px 0 var(--black)}
+th.sortable{cursor:pointer}th.sortable:hover{background:var(--surface)}
+th.num,td.num{text-align:right}
+td{padding:7px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:var(--row-alt)}
+td.t{max-width:300px}td.u{max-width:280px;font-size:11.5px;color:var(--grey-5);word-break:break-all}
+.tag{display:inline-block;font-size:11px;padding:1px 6px;border:1px solid var(--line);color:var(--grey-6);margin:0 4px 2px 0;border-radius:var(--radius)}
+.tag.top{background:var(--surface);border-color:var(--surface);color:var(--black)}
+.mini{height:4px;background:var(--line-soft);position:relative;min-width:60px;margin-top:5px}.mini i{position:absolute;left:0;top:0;bottom:0;background:var(--grey-3);display:block}
+.interp{background:var(--card);border:1px solid var(--line-soft);border-left:3px solid var(--primary);padding:16px 18px}
+.interp .ih{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.interp .ih h4{margin:0;font-size:15px;font-weight:600}
+.verdict{font-size:11.5px;font-weight:600;padding:2px 8px;background:var(--surface);color:var(--black)}
+.verdict.good{background:var(--success);color:var(--white)}.verdict.warn{background:var(--warning);color:var(--black)}.verdict.bad{background:var(--danger);color:var(--white)}
+.interp .lead{font-size:13.5px;margin:8px 0 12px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);margin-bottom:12px}
+@media(max-width:820px){.cmp,.mrow{grid-template-columns:1fr!important}}
+.cmp>div{background:var(--card);padding:11px 13px;border-top:3px solid var(--card)}.cmp>div.win{border-top-color:var(--grey-6)}
+.m-l{font-size:12px;font-weight:600;color:var(--grey-5)}.m-v{font-size:22px;font-weight:300;margin:3px 0 2px}
+.m-q{font-size:11.5px;color:var(--grey-5);font-style:italic}.m-f{font-size:11px;color:var(--grey-4);margin-top:4px}
+.interp ul{margin:0;padding-left:18px}.interp li{margin-bottom:6px;font-size:12.5px}
+.rep{background:var(--surface);padding:10px 13px;margin-top:12px;font-size:12.5px}.rep b{display:block;font-size:11.5px;color:var(--grey-5);margin-bottom:3px;font-weight:600}
+.methodbox{background:var(--card);border:1px solid var(--line-soft);border-left:3px solid var(--grey-6);padding:15px 18px}
+.methodbox h4{margin:0 0 8px;font-size:14px;font-weight:600}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);margin:10px 0}
+.mrow>div{background:var(--card);padding:11px 13px}
+.t1{font-size:12px;font-weight:600;color:var(--grey-5)}.v1{font-size:20px;font-weight:300;margin:3px 0}.d1{font-size:11.5px;color:var(--grey-5)}
+.methodbox p{margin:7px 0;font-size:12.5px}
+code{background:var(--bg);padding:1px 5px;font-family:Consolas,monospace;font-size:11.5px}
+.flag{background:var(--surface-alt);border-left:3px solid var(--bronze-2);padding:9px 12px;font-size:11.5px;color:var(--grey-6);margin-top:10px}
+.exctl{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.exctl label{display:block;font-size:12px;color:var(--grey-5);font-weight:600;margin-bottom:5px}
+footer{max-width:1480px;margin:0 auto;padding:0 28px 40px;font-size:11.5px;color:var(--grey-4)}
+.tt{position:fixed;pointer-events:none;background:var(--grey-6);color:var(--white);font-size:11.5px;padding:6px 9px;z-index:99;display:none;max-width:320px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <header><div class="hwrap">
+    <div class="brand"><h1>Comms Intelligence Dashboard</h1>
+      <p>Internal communications performance &middot; mailings, articles, pages, video and click tracking</p></div>
+    <div class="hmeta"><b id="hScope">2026 YTD</b><br>Source: synthetic demo data<br>Reach reference month: <b id="hRef">2026-06</b></div>
+  </div></header>
+  <nav class="tabs"><div class="tabwrap">
+    <button class="tab active" data-p="overview">Overview</button>
+    <button class="tab" data-p="mailings">Mailings &middot; iMEP</button>
+    <button class="tab" data-p="articles">Articles &middot; Intranet</button>
+    <button class="tab" data-p="pages">Pages</button>
+    <button class="tab" data-p="videos">Videos</button>
+    <button class="tab" data-p="clicks">Click tracking</button>
+    <button class="tab" data-p="breakdown">Mailings breakdown</button>
+  </div></nav>
+</div>
+
+<main>
+<aside>
+  <div class="fhead"><h2>Control panel</h2><div class="ctx" id="fCtx">Overview</div></div>
+  <div class="fbody">
+    <div id="fDyn"></div>
+    <div class="fsep">
+      <div class="fgroup"><label for="fRef">Reach reference month</label><select id="fRef"></select></div>
+      <div class="btn-row"><button class="btn btn-primary" id="bReset">Reset</button><button class="btn" id="bCsv">Export CSV</button></div>
+      <div class="rowcount" id="fCount"></div>
+    </div>
+    <div class="scopebox">Mailing rates use the <b>simple-average method</b> so every figure reconciles with the source file by hand.<br>
+      <b>Articles reach</b> = unique visitors / Geduld headcount of the published month.<br>
+      Reach is not applied to click tracking &mdash; that export has no date dimension.</div>
+  </div>
+</aside>
+
+<div>
+<section class="panel active" id="p-overview">
+  <div class="sect"><div class="sect-h"><h3>Group view</h3><span id="ovScope"></span></div><div class="kpis" id="ovKpi"></div><div class="vbar" id="ovVal"></div></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Monthly volume &amp; engagement</h4><div class="sub">Emails sent (bars) vs. open rate (line)</div><div id="cOvTrend"></div>
+      <div class="legend"><span><i class="sw1"></i>Emails sent</span><span><i class="sw2"></i>Open rate</span></div></div>
+    <div class="card"><h4>Channel scorecard</h4><div class="sub">Consumed touchpoints by channel in scope</div><div id="cOvMix"></div>
+      <div class="note">Opens and views are not equivalent units &mdash; compare trends within a channel, not across.</div></div>
+  </div>
+  <div class="grid3 sect">
+    <div class="card"><h4>Divisions by emails sent</h4><div class="sub">Corp Comms KPI reporting</div><div id="cOvDiv"></div></div>
+    <div class="card"><h4>Engagement by content type</h4><div class="sub">Click-to-open rate, min. 20 mailings</div><div id="cOvCto"></div></div>
+    <div class="card"><h4>Top packs</h4><div class="sub">Emails sent by tracking ID pack</div><div id="cOvPack"></div></div>
+  </div>
+  <div class="card sect"><h4>Signals worth acting on</h4><div class="sub">Generated from the current filter scope</div><div id="ovInsights"></div></div>
+</section>
+
+<section class="panel" id="p-mailings">
+  <div class="sect"><div class="sect-h"><h3>Mailings &middot; iMEP</h3><span id="mlScope"></span></div><div class="kpis" id="mlKpi"></div><div class="vbar" id="mlVal"></div></div>
+  <div class="sect" id="mlInterp"></div>
+  <div class="sect" id="mlMethod"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Open rate vs. click-to-open by month</h4><div class="sub">Simple average of per-mailing rates</div><div id="cMlRates"></div>
+      <div class="legend"><span><i class="sw1"></i>Open rate</span><span><i class="sw2"></i>Click-to-open</span></div></div>
+    <div class="card"><h4>Audience size vs. open rate</h4><div class="sub">Each audience size band, bubble = mailings sent</div><div id="cMlCluster"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Content type performance</h4><div class="sub">Open rate, simple average</div><div id="cMlCT"></div></div>
+    <div class="card"><h4>Pack performance</h4><div class="sub">Click-to-open by tracking ID pack</div><div id="cMlPack"></div></div>
+  </div>
+  <div class="card sect"><h4>Mailing league table</h4><div class="sub">Click a column header to sort &middot; top 40 in scope</div><div class="scroll"><table id="tMl"></table></div></div>
+</section>
+
+<section class="panel" id="p-articles">
+  <div class="sect"><div class="sect-h"><h3>Articles &middot; Intranet</h3><span id="arScope"></span></div><div class="kpis" id="arKpi"></div>
+    <div class="flag" id="arFlag"></div><div class="vbar" id="arVal"></div></div>
+  <div class="sect" id="arSel"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Views by publishing month</h4><div class="sub">Total views of articles published each month</div><div id="cArTrend"></div></div>
+    <div class="card"><h4>Article reach vs. Geduld headcount</h4><div class="sub">Unique visitors / internal headcount of the publishing month</div><div id="cArReach"></div>
+      <div class="legend"><span><i class="sw1"></i>Average article</span><span><i class="sw2"></i>Best article</span></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Theme performance</h4><div class="sub">Average unique visitors per article</div><div id="cArTheme"></div></div>
+    <div class="card"><h4>Topic tag performance</h4><div class="sub">Any-match: an article counts under every tag it carries</div><div id="cArTopic"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Author performance</h4><div class="sub">Average unique visitors per article, min. 3 articles</div><div id="cArAuthor"></div></div>
+    <div class="card"><h4>News channel performance</h4><div class="sub">Average unique visitors, min. 3 articles</div><div id="cArChan"></div></div>
+  </div>
+  <div class="card sect"><h4>Article league table</h4><div class="sub">Top 30 by views in scope &middot; unique visitors shown per article only, never summed</div><div class="scroll"><table id="tAr"></table></div></div>
+</section>
+
+<section class="panel" id="p-pages">
+  <div class="sect"><div class="sect-h"><h3>Pages</h3><span id="pgScope"></span></div><div class="kpis" id="pgKpi"></div><div class="vbar" id="pgVal"></div></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by unique visitors</h4><div class="sub">Period total, not YTD</div><div id="cPgTop"></div></div>
+    <div class="card"><h4>Visit intensity</h4><div class="sub">Views per unique visitor &mdash; how often people come back</div><div id="cPgInt"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Audience by visitor division</h4><div class="sub">Unique visitors, divisional split</div><div id="cPgDiv"></div></div>
+    <div class="card"><h4>Audience by visitor region</h4><div class="sub">Unique visitors, regional split</div><div id="cPgReg"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Theme performance</h4><div class="sub">Average unique visitors per page</div><div id="cPgTheme"></div></div>
+    <div class="card"><h4>Content type performance</h4><div class="sub">Average unique visitors per page</div><div id="cPgCt"></div></div>
+  </div>
+  <div class="card sect"><h4>Page table</h4><div class="sub">All pages in scope &middot; YTD columns alongside period figures</div><div class="scroll"><table id="tPg"></table></div></div>
+</section>
+
+<section class="panel" id="p-videos">
+  <div class="sect"><div class="sect-h"><h3>Video</h3><span id="vdScope"></span></div><div class="kpis" id="vdKpi"></div><div class="vbar" id="vdVal"></div></div>
+  <div class="sect" id="vdInterp"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Views by month published</h4><div class="sub">Views and completions</div><div id="cVdTrend"></div>
+      <div class="legend"><span><i class="sw1"></i>Views</span><span><i class="sw2"></i>Completions (100%)</span></div></div>
+    <div class="card"><h4>Drop-off curve</h4><div class="sub">Share of started views reaching each quartile</div><div id="cVdFunnel"></div></div>
+  </div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Completion rate by owner</h4><div class="sub">Completions / started views, min. 5 videos</div><div id="cVdDiv"></div></div>
+    <div class="card"><h4>Engagement score by owner</h4><div class="sub">Average score, min. 5 videos</div><div id="cVdEng"></div></div>
+  </div>
+  <div class="card sect"><h4>Video league table</h4><div class="sub">Top 30 by views in scope</div><div class="scroll"><table id="tVd"></table></div></div>
+</section>
+
+<section class="panel" id="p-clicks">
+  <div class="sect"><div class="sect-h"><h3>Click tracking &middot; pages &amp; links</h3><span id="clScope"></span></div><div class="kpis" id="clKpi"></div><div class="vbar" id="clVal"></div></div>
+  <div class="sect" id="clInterp"></div>
+  <div class="grid2 sect">
+    <div class="card"><h4>Top pages by views</h4><div class="sub">Intranet click-tracking sites</div><div id="cClPages"></div></div>
+    <div class="card"><h4>CTVR vs. UCTUVR by page</h4><div class="sub">Interaction rate against visitor conversion rate</div><div id="cClCtr"></div>
+      <div class="legend"><span><i class="sw1"></i>CTVR (interaction)</span><span><i class="sw2"></i>UCTUVR (conversion)</span></div></div>
+  </div>
+  <div class="card sect"><h4>Page table</h4><div class="sub">CTVR = clicks / views &middot; UCTUVR = unique clicks / unique visitors</div><div class="scroll"><table id="tCl"></table></div></div>
+  <div class="card sect"><h4>Destination links</h4><div class="sub">Top 25 in scope by total clicks</div><div class="scroll"><table id="tLk"></table></div></div>
+</section>
+
+<section class="panel" id="p-breakdown">
+  <div class="sect"><div class="sect-h"><h3>Mailings breakdown</h3><span>Pivot mailings performance on any dimension</span></div>
+    <div class="card">
+      <div class="exctl">
+        <div style="min-width:200px"><label for="exDim">Break down by</label><select id="exDim"></select></div>
+        <div style="min-width:190px"><label for="exMetric">Metric</label><select id="exMetric"></select></div>
+        <div style="min-width:130px"><label for="exTop">Show</label><select id="exTop"><option value="10">Top 10</option><option value="15" selected>Top 15</option><option value="25">Top 25</option><option value="999">All</option></select></div>
+      </div>
+      <div id="cEx"></div><div class="note" id="exNote"></div>
+    </div></div>
+  <div class="card sect"><h4>Breakdown detail</h4><div class="sub">Full metric set for the selected dimension</div><div class="scroll"><table id="tEx"></table></div></div>
+</section>
+</div>
+</main>
+
+<footer>Filters are contextual: each tab exposes the slicers that belong to its dataset. Mailing rates use the simple-average method (mean of the per-mailing percentage columns) so they reconcile with the source file by hand.
+Theme and topic use any-match logic &mdash; an item carrying several tags counts under each one, so tag totals exceed the item count. Click tracking is a cumulative export with no date dimension.</footer>
+<div class="tt" id="tt"></div>
+
+<script>const DATA = /*__DATA__*/null;</script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
+const fmt=n=>{n=+n||0;const a=Math.abs(n);if(a>=1e9)return(n/1e9).toFixed(1)+'bn';if(a>=1e6)return(n/1e6).toFixed(2)+'m';if(a>=1e4)return Math.round(n/1e3)+'k';return Math.round(n).toLocaleString('en-GB');};
+const full=n=>Math.round(+n||0).toLocaleString('en-GB');
+const pct=(n,d=1)=>n==null?'n/a':((+n||0)*100).toFixed(d)+'%';
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const tt=$('#tt');
+function bindTip(el,html){el.addEventListener('mousemove',e=>{tt.innerHTML=html;tt.style.display='block';
+  tt.style.left=Math.min(e.clientX+14,window.innerWidth-340)+'px';tt.style.top=(e.clientY+16)+'px';});
+  el.addEventListener('mouseleave',()=>tt.style.display='none');}
+const SVGNS='http://www.w3.org/2000/svg';
+function el(t,a={},p){const n=document.createElementNS(SVGNS,t);for(const k in a)n.setAttribute(k,a[k]);if(p)p.appendChild(n);return n;}
+function svgBox(host,h){host.innerHTML='';const w=host.clientWidth||600;const s=el('svg',{viewBox:`0 0 ${w} ${h}`,height:h},host);return{s,w,h};}
+const trunc=(s,n)=>{s=String(s==null?'':s);return s.length>n?s.slice(0,n-1)+'…':s;};
+const isDim=l=>/^\(|^unknown$/i.test(String(l));
+const empty=(s)=>{el('text',{x:0,y:24,class:'g-lbl'},s).textContent='No data in scope';};
+
+/* ==================== charts — greys carry data, one colour per series ==================== */
+function hBar(id,rows,o={}){const host=$('#'+id);if(!host)return;rows=rows.slice(0,o.limit||10);
+  const rowH=o.rowH||26,pad=4,h=Math.max(60,rows.length*rowH+pad*2);const{s,w}=svgBox(host,h);
+  if(!rows.length)return empty(s);
+  const labelW=Math.min(o.labelW||170,w*0.44),valW=62,max=Math.max(...rows.map(r=>Math.abs(r.v)))||1;
+  const f=o.fmt||fmt;
+  rows.forEach((r,i)=>{const y=pad+i*rowH,maxCh=Math.max(8,Math.floor(labelW/6.4));
+    const t=el('text',{x:0,y:y+rowH/2+4,class:'g-lbl'},s);t.textContent=trunc(r.l,maxCh);
+    bindTip(t,`<b>${esc(r.l)}</b>${r.note?'<br>'+esc(r.note):''}`);
+    const bw=Math.max(1,(Math.abs(r.v)/max)*(w-labelW-valW));
+    const b=el('rect',{x:labelW,y:y+5,width:bw,height:rowH-11,class:'bar'+(isDim(r.l)?' dim':'')},s);
+    bindTip(b,`<b>${esc(r.l)}</b><br>${f(r.v)}${r.note?'<br>'+esc(r.note):''}`);
+    el('text',{x:labelW+bw+6,y:y+rowH/2+4,class:'g-val'},s).textContent=f(r.v);});}
+
+function comboChart(id,cats,bars,line,o={}){const host=$('#'+id);if(!host)return;const h=o.h||240;const{s,w}=svgBox(host,h);
+  if(!cats.length)return empty(s);
+  const ml=4,mr=4,mb=24,lineBand=line?52:0,mt=line?20:4,barTop=mt+lineBand+(line?36:18),iw=w-ml-mr,ih=h-mb-barTop;
+  const bmax=Math.max(...bars)||1,slot=iw/cats.length,bw=Math.min(44,slot*0.58);
+  cats.forEach((c,i)=>{const cx=ml+slot*i+slot/2,bh=(bars[i]||0)/bmax*ih;
+    const r=el('rect',{x:cx-bw/2,y:h-mb-bh,width:bw,height:bh,class:'bar'},s);
+    bindTip(r,`<b>${esc(c)}</b><br>${esc(o.barLabel||'Value')}: ${full(bars[i])}${line&&line[i]!=null?'<br>'+esc(o.lineLabel||'Rate')+': '+pct(line[i]):''}`);
+    el('text',{x:cx,y:h-mb-bh-5,class:'g-val','text-anchor':'middle'},s).textContent=fmt(bars[i]);
+    el('text',{x:cx,y:h-7,class:'g-ax','text-anchor':'middle'},s).textContent=c;});
+  el('line',{x1:ml,x2:ml+iw,y1:h-mb,y2:h-mb,class:'axis'},s);
+  if(line){const vals=line.filter(v=>v!=null);if(!vals.length)return;const lo=Math.min(...vals),hi=Math.max(...vals),rng=(hi-lo)||0.01;
+    const X=i=>ml+slot*i+slot/2,Y=v=>mt+lineBand-((v-lo)/rng)*lineBand;let d='';
+    line.forEach((v,i)=>{if(v==null)return;d+=(d?'L':'M')+X(i)+' '+Y(v);});
+    el('path',{d,class:'lineHalo'},s);el('path',{d,class:'lineS'},s);
+    line.forEach((v,i)=>{if(v==null)return;const c=el('circle',{cx:X(i),cy:Y(v),r:3.5,class:'dot'},s);
+      bindTip(c,`<b>${esc(cats[i])}</b><br>${esc(o.lineLabel||'Rate')}: ${pct(v)}`);
+      /* label on the outside of the bend so it never sits on the line */
+      const nb=[line[i-1],line[i+1]].filter(x=>x!=null),below=nb.length&&v<Math.min(...nb);
+      el('text',{x:X(i),y:below?Y(v)+15:Y(v)-8,class:'g-ax','text-anchor':'middle'},s).textContent=pct(v,1);});}}
+
+function groupCols(id,cats,A,B,o={}){const host=$('#'+id);if(!host)return;const h=o.h||230;const{s,w}=svgBox(host,h);
+  if(!cats.length)return empty(s);
+  const ml=44,mr=8,mt=12,mb=24,iw=w-ml-mr,ih=h-mt-mb;
+  const max=Math.max(...A.filter(x=>x!=null),...B.filter(x=>x!=null))||1;
+  [0,.5,1].forEach(f=>el('text',{x:ml-8,y:mt+ih-f*ih+4,class:'g-ax','text-anchor':'end'},s).textContent=o.fmtAxis?o.fmtAxis(max*f):fmt(max*f));
+  const slot=iw/cats.length,bw=Math.max(3,Math.min(20,slot*0.32));
+  cats.forEach((c,i)=>{const x0=ml+i*slot+slot/2;
+    [[A[i],'bar',-bw-1,o.labelA||'A'],[B[i],'bar s2',1,o.labelB||'B']].forEach(([v,cls,off,lab])=>{if(v==null)return;
+      const bh=v/max*ih;const r=el('rect',{x:x0+off,y:mt+ih-bh,width:bw,height:Math.max(v?1:0,bh),class:cls},s);
+      bindTip(r,`<b>${esc(c)}</b> · ${esc(lab)}<br>${o.fmtTip?o.fmtTip(v):full(v)}`);});
+    el('text',{x:x0,y:h-7,class:'g-ax','text-anchor':'middle'},s).textContent=c;});
+  el('line',{x1:ml,x2:ml+iw,y1:mt+ih,y2:mt+ih,class:'axis'},s);}
+
+function pairBar(id,rows,o={}){const host=$('#'+id);if(!host)return;rows=rows.slice(0,o.limit||10);
+  const rowH=o.rowH||34,pad=4,h=Math.max(60,rows.length*rowH+pad*2);const{s,w}=svgBox(host,h);
+  if(!rows.length)return empty(s);
+  const labelW=Math.min(o.labelW||190,w*0.42),valW=80,max=Math.max(...rows.flatMap(r=>[r.a,r.b]))||1;
+  rows.forEach((r,i)=>{const y=pad+i*rowH,maxCh=Math.max(8,Math.floor(labelW/6.4));
+    const t=el('text',{x:0,y:y+rowH/2+4,class:'g-lbl'},s);t.textContent=trunc(r.l,maxCh);bindTip(t,`<b>${esc(r.l)}</b>`);
+    const bh=(rowH-12)/2;
+    [[r.a,'bar',0,o.labA||'A'],[r.b,'bar s2',bh+2,o.labB||'B']].forEach(([v,cls,off,lab])=>{
+      const bw=Math.max(1,(v/max)*(w-labelW-valW));
+      bindTip(el('rect',{x:labelW,y:y+5+off,width:bw,height:bh,class:cls},s),`<b>${esc(r.l)}</b><br>${esc(lab)}: ${pct(v)}`);});
+    el('text',{x:w-valW+10,y:y+rowH/2+4,class:'g-val'},s).textContent=pct(r.a,0)+' / '+pct(r.b,0);});}
+
+function bubbles(id,pts,o={}){const host=$('#'+id);if(!host)return;const h=o.h||250;const{s,w}=svgBox(host,h);
+  if(!pts.length)return empty(s);
+  const ml=44,mr=16,mt=24,mb=34,iw=w-ml-mr,ih=h-mt-mb;
+  /* log x-scale: audience bands span 10 to 100,000+ recipients */
+  const lx=pts.map(p=>Math.log10(Math.max(1,p.x))),xlo=Math.min(...lx),xhi=Math.max(...lx),xr=(xhi-xlo)||1;
+  const ys=pts.map(p=>p.y),ylo=Math.max(0,Math.floor((Math.min(...ys)-0.1)*10)/10),yhi=Math.min(1,Math.max(...ys)+0.05),yr=(yhi-ylo)||1;
+  const rmax=Math.max(...pts.map(p=>p.r))||1;
+  [0,.5,1].forEach(f=>el('text',{x:ml-8,y:mt+ih-f*ih+4,class:'g-ax','text-anchor':'end'},s).textContent=pct(ylo+yr*f,0));
+  el('line',{x1:ml,x2:ml+iw,y1:mt+ih,y2:mt+ih,class:'axis'},s);
+  const P=pts.map((p,i)=>({...p,cx:ml+30+((lx[i]-xlo)/xr)*(iw-90),cy:mt+ih-((p.y-ylo)/yr)*ih,rr:6+Math.sqrt(p.r/rmax)*16}));
+  P.slice().sort((a,b)=>b.rr-a.rr).forEach(p=>bindTip(el('circle',{cx:p.cx,cy:p.cy,r:p.rr,class:'bub'},s),
+    `<b>${esc(p.l)}</b><br>Avg audience: ${full(p.x)}<br>Open rate: ${pct(p.y)}<br>Mailings: ${full(p.r)}`));
+  P.forEach(p=>{const t=el('text',{x:p.cx,y:p.cy-p.rr-5,class:'g-lbl','text-anchor':'middle'},s);t.textContent=trunc(p.l,16);});
+  P.forEach(p=>el('text',{x:p.cx,y:mt+ih+14,class:'g-ax','text-anchor':'middle'},s).textContent=fmt(p.x));
+  el('text',{x:ml+iw/2,y:h-4,class:'g-ax','text-anchor':'middle'},s).textContent=(o.xLabel||'Average audience per mailing')+' (log scale)';}
+
+/* ==================== model ==================== */
+const M=DATA.mailP,N=M.es.length,DIM=M.dims;
+const uniq=a=>[...new Set(a)].filter(x=>x!=null&&x!=='').sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+const uniqTags=l=>[...new Set(l.flat())].filter(Boolean).sort((a,b)=>a.localeCompare(b));
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+
+const S={ml:{q:'all',m:'all',cc:'all',div:'all',ct:'all',th:'all',tp:'all',tm:'all',cl:'all',pk:'all',tcl:'all',tid:''},
+  ar:{q:'all',m:'all',name:'all',au:'all',ov:'all',th:'all',tp:'all',ts:'all',rg:'all',ch:'all',pk:'all',tcl:'all'},
+  vd:{div:'all',q:'all',m:'all',lang:'all',name:''},
+  cl:{site:'all',url:'all',dest:'',link:''},
+  pg:{site:'all',div:'all',ct:'all',th:'all',tp:'all',org:'all',rg:'all',vdiv:'all',vreg:'all'},ref:'2026-06'};
+
+const PK_ML=uniq(DIM.pk.filter(p=>p)),PK_AR=uniq(DATA.arts.map(a=>a.pk).filter(p=>p));
+const TCL_ML=uniq(DIM.tcl.filter(p=>p)),TCL_AR=uniq(DATA.arts.map(a=>a.tcl).filter(p=>p));
+const NA_VID='Not captured in the video export',NA_CLK='Not captured in the click-tracking export';
+const vv=v=>[v,v];
+const SPEC={
+  overview:[
+    {ns:'ml',k:'q',label:'Quarter',opts:()=>uniq(M.q).map(v=>[v,'Q'+v])},
+    {ns:'ml',k:'m',label:'Month',opts:()=>uniq(M.m).map(v=>[v,MN[v]+' 2026'])},
+    {ns:'ml',k:'cc',label:'Corp Comms scope',opts:()=>uniq(DIM.cc).map(vv)},
+    {ns:'ml',k:'div',label:'Division',hint:'KPI reporting',opts:()=>uniq(DIM.div).map(vv)},
+    {ns:'ml',k:'tcl',label:'Tracking ID cluster',opts:()=>TCL_ML.map(vv),blank:'(No tracking ID)'},
+    {ns:'ml',k:'pk',label:'Tracking ID pack',opts:()=>PK_ML.map(vv),blank:'(No pack)'},
+    {ns:'ml',k:'cl',label:'Audience size',opts:()=>uniq(DIM.cl).map(vv)}],
+  mailings:[
+    {ns:'ml',k:'q',label:'Quarter',opts:()=>uniq(M.q).map(v=>[v,'Q'+v])},
+    {ns:'ml',k:'m',label:'Month',opts:()=>uniq(M.m).map(v=>[v,MN[v]+' 2026'])},
+    {ns:'ml',k:'cc',label:'Corp Comms scope',opts:()=>uniq(DIM.cc).map(vv)},
+    {ns:'ml',k:'div',label:'Division',hint:'KPI reporting',opts:()=>uniq(DIM.div).map(vv)},
+    {ns:'ml',k:'ct',label:'Content type',opts:()=>uniq(DIM.ct).map(vv)},
+    {ns:'ml',k:'th',label:'Theme',hint:'any match',opts:()=>uniqTags(M.th).map(vv)},
+    {ns:'ml',k:'tp',label:'Topic',hint:'any match',opts:()=>uniqTags(M.tp).map(vv)},
+    {ns:'ml',k:'tm',label:'Template',opts:()=>uniq(DIM.tm).map(vv)},
+    {ns:'ml',k:'cl',label:'Audience size',hint:'recipients per mailing',opts:()=>uniq(DIM.cl).map(vv)},
+    {ns:'ml',k:'tcl',label:'Tracking ID cluster',opts:()=>TCL_ML.map(vv),blank:'(No tracking ID)'},
+    {ns:'ml',k:'pk',label:'Tracking ID pack',opts:()=>PK_ML.map(vv),blank:'(No pack)'},
+    {ns:'ml',k:'tid',label:'Tracking ID',type:'search',ph:'Search tracking ID…'}],
+  articles:[
+    {ns:'ar',k:'name',label:'Article name',opts:()=>uniq(DATA.arts.map(a=>a.t)).map(vv)},
+    {ns:'ar',k:'au',label:'Author',opts:()=>uniq(DATA.arts.map(a=>a.au)).map(vv)},
+    {ns:'ar',k:'q',label:'Quarter',opts:()=>uniq(DATA.arts.map(a=>a.q)).map(v=>[v,'Q'+v])},
+    {ns:'ar',k:'m',label:'Month (published)',opts:()=>uniq(DATA.arts.map(a=>a.m)).map(v=>[v,MN[v]+' 2026'])},
+    {ns:'ar',k:'ov',label:'Overtitle',opts:()=>uniq(DATA.arts.map(a=>a.ov)).map(vv)},
+    {ns:'ar',k:'th',label:'Theme tag',opts:()=>uniq(DATA.arts.map(a=>a.th)).map(vv)},
+    {ns:'ar',k:'tp',label:'Topic tag',hint:'any match',opts:()=>uniqTags(DATA.arts.map(a=>a.tp)).map(vv)},
+    {ns:'ar',k:'ts',label:'Top story',opts:()=>uniq(DATA.arts.map(a=>a.ts)).map(vv)},
+    {ns:'ar',k:'rg',label:'Region (personalization)',opts:()=>uniq(DATA.arts.map(a=>a.rg)).map(vv)},
+    {ns:'ar',k:'ch',label:'News channel',opts:()=>uniq(DATA.arts.map(a=>a.ch)).map(vv)},
+    {ns:'ar',k:'tcl',label:'Tracking ID cluster',opts:()=>TCL_AR.map(vv),blank:'(No tracking ID)'},
+    {ns:'ar',k:'pk',label:'Tracking ID pack',opts:()=>PK_AR.map(vv),blank:'(No pack)'}],
+  pages:[
+    {ns:'pg',k:'site',label:'Site name',opts:()=>uniq(DATA.pgLevel.map(p=>p.site)).map(vv)},
+    {ns:'pg',k:'div',label:'Business division owner',opts:()=>uniq(DATA.pgLevel.map(p=>p.div)).map(vv)},
+    {ns:'pg',k:'ct',label:'Content type tag',opts:()=>uniq(DATA.pgLevel.map(p=>p.ct)).map(vv)},
+    {ns:'pg',k:'th',label:'Theme tag',opts:()=>uniq(DATA.pgLevel.map(p=>p.th)).map(vv)},
+    {ns:'pg',k:'tp',label:'Topic tag',hint:'any match',opts:()=>uniqTags(DATA.pgLevel.map(p=>p.tp)).map(vv)},
+    {ns:'pg',k:'org',label:'Target organization',opts:()=>uniq(DATA.pgLevel.map(p=>p.org)).map(vv)},
+    {ns:'pg',k:'rg',label:'Target region',opts:()=>uniq(DATA.pgLevel.map(p=>p.rg)).map(vv)},
+    {ns:'pg',k:'vdiv',label:'Visitor division',hint:'restricts all views',opts:()=>uniq(DATA.pgDiv.map(p=>p.sp)).map(vv)},
+    {ns:'pg',k:'vreg',label:'Visitor region',hint:'restricts all views',opts:()=>uniq(DATA.pgReg.map(p=>p.sp)).map(vv)}],
+  videos:[
+    {ns:'vd',k:'div',label:'Business division owner',opts:()=>uniq(DATA.vids.map(v=>v.div)).map(vv)},
+    {ns:'vd',k:'q',label:'Quarter',opts:()=>uniq(DATA.vids.map(v=>v.q)).map(v=>[v,'Q'+v])},
+    {ns:'vd',k:'m',label:'Month (published)',opts:()=>uniq(DATA.vids.map(v=>v.m)).map(v=>[v,MN[v]+' 2026'])},
+    {ns:'vd',k:'lang',label:'Language',opts:()=>uniq(DATA.vids.map(v=>v.lang)).map(vv)},
+    {ns:'vd',k:'name',label:'Video name',type:'search',ph:'Search video name…'},
+    {ns:'vd',k:'tcl',label:'Tracking ID cluster',disabled:NA_VID},
+    {ns:'vd',k:'pk',label:'Tracking ID pack',disabled:NA_VID}],
+  clicks:[
+    {ns:'cl',k:'site',label:'Site name',opts:()=>uniq(DATA.pages.map(p=>p.site)).map(vv)},
+    {ns:'cl',k:'url',label:'Page URL',opts:()=>uniq(DATA.pages.map(p=>p.url)).map(vv)},
+    {ns:'cl',k:'dest',label:'Destination URL',type:'search',ph:'Search destination URL…'},
+    {ns:'cl',k:'link',label:'Link title',type:'search',ph:'Search link title…'},
+    {ns:'cl',k:'tcl',label:'Tracking ID cluster',disabled:NA_CLK},
+    {ns:'cl',k:'pk',label:'Tracking ID pack',disabled:NA_CLK}],
+  breakdown:null};
+SPEC.breakdown=SPEC.mailings;
+
+function mailIdx(){const f=S.ml,out=[],tq=(f.tid||'').toLowerCase();
+  for(let i=0;i<N;i++){
+    if(f.q!=='all'&&M.q[i]!=+f.q)continue;
+    if(f.m!=='all'&&M.m[i]!=+f.m)continue;
+    if(f.cc!=='all'&&DIM.cc[M.cols.cc[i]]!==f.cc)continue;
+    if(f.div!=='all'&&DIM.div[M.cols.div[i]]!==f.div)continue;
+    if(f.ct!=='all'&&DIM.ct[M.cols.ct[i]]!==f.ct)continue;
+    if(f.th!=='all'&&!M.th[i].includes(f.th))continue;
+    if(f.tp!=='all'&&!M.tp[i].includes(f.tp))continue;
+    if(f.tm!=='all'&&DIM.tm[M.cols.tm[i]]!==f.tm)continue;
+    if(f.cl!=='all'&&DIM.cl[M.cols.cl[i]]!==f.cl)continue;
+    if(f.pk!=='all'){const p=DIM.pk[M.cols.pk[i]];if(f.pk==='__blank__'){if(p)continue;}else if(p!==f.pk)continue;}
+    if(f.tcl!=='all'){const c=DIM.tcl[M.cols.tcl[i]];if(f.tcl==='__blank__'){if(c)continue;}else if(c!==f.tcl)continue;}
+    if(tq&&!String(DIM.tid[M.cols.tid[i]]||'').toLowerCase().includes(tq))continue;
+    out.push(i);}
+  return out;}
+
+/* SIMPLE-AVERAGE aggregation — mean of per-mailing stored percentages, blanks excluded */
+function mailAgg(idx){let es=0,op=0,uc=0,ms=0;const po=[],pc=[],pu=[];
+  idx.forEach(i=>{es+=M.es[i];op+=M.op[i];uc+=M.uc[i];ms+=M.ms[i];
+    if(M.po[i]!=null)po.push(M.po[i]);if(M.pc[i]!=null)pc.push(M.pc[i]);if(M.pu[i]!=null)pu.push(M.pu[i]);});
+  return{es,op,uc,ms,n:idx.length,open:mean(po),cto:mean(pc),ctr:mean(pu),
+    nOpen:po.length,nCto:pc.length,nCtr:pu.length,wOpen:es?op/es:0,wCto:op?uc/op:0,wCtr:es?uc/es:0};}
+
+const TAGDIM={th:1,tp:1};
+function groupMail(idx,dim){const g={};
+  const add=(k,i)=>{const o=g[k]=g[k]||{es:0,op:0,uc:0,ms:0,n:0,po:[],pc:[],pu:[]};
+    o.es+=M.es[i];o.op+=M.op[i];o.uc+=M.uc[i];o.ms+=M.ms[i];o.n++;
+    if(M.po[i]!=null)o.po.push(M.po[i]);if(M.pc[i]!=null)o.pc.push(M.pc[i]);if(M.pu[i]!=null)o.pu.push(M.pu[i]);};
+  idx.forEach(i=>{
+    if(dim==='month')return add(MN[M.m[i]],i);
+    if(TAGDIM[dim]){const l=M[dim][i];if(!l.length)add('(Untagged)',i);else l.forEach(t=>add(t,i));return;}
+    let k=DIM[dim][M.cols[dim][i]];
+    if(dim==='pk'&&!k)k='(No pack)';if(dim==='tcl'&&!k)k='(No tracking ID)';if(dim==='tid'&&!k)k='(No tracking ID)';
+    add(k,i);});
+  return Object.entries(g).map(([l,v])=>({l,...v,open:mean(v.po),cto:mean(v.pc),ctr:mean(v.pu),
+    wOpen:v.es?v.op/v.es:0,wCto:v.op?v.uc/v.op:0}));}
+
+function artsF(){const f=S.ar;
+  return DATA.arts.filter(a=>(f.q==='all'||a.q==+f.q)&&(f.m==='all'||a.m==+f.m)&&(f.name==='all'||a.t===f.name)&&
+    (f.au==='all'||a.au===f.au)&&(f.ov==='all'||a.ov===f.ov)&&(f.th==='all'||a.th===f.th)&&
+    (f.tp==='all'||a.tp.includes(f.tp))&&(f.ts==='all'||a.ts===f.ts)&&(f.rg==='all'||a.rg===f.rg)&&
+    (f.ch==='all'||a.ch===f.ch)&&(f.pk==='all'||(f.pk==='__blank__'?!a.pk:a.pk===f.pk))&&
+    (f.tcl==='all'||(f.tcl==='__blank__'?!a.tcl:a.tcl===f.tcl)));}
+function vidsF(){const f=S.vd,q=(f.name||'').toLowerCase();
+  return DATA.vids.filter(v=>(f.div==='all'||v.div===f.div)&&(f.q==='all'||v.q==+f.q)&&
+    (f.m==='all'||v.m==+f.m)&&(f.lang==='all'||v.lang===f.lang)&&(!q||v.t.toLowerCase().includes(q)));}
+function pagesF(){const f=S.cl;
+  let P=DATA.pages.filter(p=>(f.site==='all'||p.site===f.site)&&(f.url==='all'||p.url===f.url));
+  if(f.link||f.dest){const ok=new Set(linksF().map(l=>l.url));P=P.filter(p=>ok.has(p.url));}
+  return P;}
+function linksF(){const f=S.cl,lq=(f.link||'').toLowerCase(),dq=(f.dest||'').toLowerCase();
+  const sp=new Set(DATA.pages.filter(p=>f.site==='all'||p.site===f.site).map(p=>p.url));
+  return DATA.links.filter(l=>sp.has(l.url)&&(f.url==='all'||l.url===f.url)&&
+    (!lq||l.t.toLowerCase().includes(lq))&&(!dq||l.dest.toLowerCase().includes(dq)));}
+
+/* Pages: visitor slicers restrict the page set everywhere */
+function pgAttr(p){const f=S.pg;
+  return(f.site==='all'||p.site===f.site)&&(f.div==='all'||p.div===f.div)&&(f.ct==='all'||p.ct===f.ct)&&
+    (f.th==='all'||p.th===f.th)&&(f.tp==='all'||p.tp.includes(f.tp))&&(f.org==='all'||p.org===f.org)&&
+    (f.rg==='all'||p.rg===f.rg);}
+function pgAllowedUrls(){let set=null;
+  if(S.pg.vdiv!=='all'){set=new Set(DATA.pgDiv.filter(p=>p.sp===S.pg.vdiv).map(p=>p.url));}
+  if(S.pg.vreg!=='all'){const r=new Set(DATA.pgReg.filter(p=>p.sp===S.pg.vreg).map(p=>p.url));
+    set=set?new Set([...set].filter(u=>r.has(u))):r;}
+  return set;}
+function pgLevelF(){const allow=pgAllowedUrls();return DATA.pgLevel.filter(p=>pgAttr(p)&&(!allow||allow.has(p.url)));}
+function pgDivF(){const allow=pgAllowedUrls();
+  return DATA.pgDiv.filter(p=>pgAttr(p)&&(!allow||allow.has(p.url))&&(S.pg.vdiv==='all'||p.sp===S.pg.vdiv));}
+function pgRegF(){const allow=pgAllowedUrls();
+  return DATA.pgReg.filter(p=>pgAttr(p)&&(!allow||allow.has(p.url))&&(S.pg.vreg==='all'||p.sp===S.pg.vreg));}
+
+/* ==================== filter panel ==================== */
+let CURRENT='overview';
+const NAMES={overview:'Overview',mailings:'Mailings · iMEP',articles:'Articles · Intranet',pages:'Pages',videos:'Videos',clicks:'Click tracking',breakdown:'Mailings breakdown'};
+function buildPanel(tab){const spec=SPEC[tab]||[],host=$('#fDyn');
+  host.innerHTML=spec.map((f,n)=>{const id='f_'+f.ns+'_'+f.k,lab=`${esc(f.label)}${f.hint?` <span class="hint">(${esc(f.hint)})</span>`:''}`;
+    if(f.disabled)return`<div class="fgroup off"><label for="${id}">${lab}</label><select id="${id}" disabled><option>Not available</option></select><div class="na">${esc(f.disabled)}</div></div>`;
+    const val=S[f.ns][f.k];
+    if(f.type==='search')return`<div class="fgroup"><label for="${id}">${lab}</label><input id="${id}" type="search" data-ns="${f.ns}" data-k="${f.k}" placeholder="${esc(f.ph||'')}" value="${esc(val)}"></div>`;
+    const opts=f.opts().map(([v,l])=>`<option value="${esc(v)}"${String(v)===String(val)?' selected':''}>${esc(l)}</option>`).join('');
+    const blank=f.blank?`<option value="__blank__"${val==='__blank__'?' selected':''}>${esc(f.blank)}</option>`:'';
+    return`<div class="fgroup"><label for="${id}">${lab}</label><select id="${id}" data-ns="${f.ns}" data-k="${f.k}"><option value="all">(All)</option>${blank}${opts}</select></div>`;}).join('');
+  host.querySelectorAll('select[data-ns]').forEach(s=>s.addEventListener('change',e=>{S[e.target.dataset.ns][e.target.dataset.k]=e.target.value;render();}));
+  host.querySelectorAll('input[type=search]').forEach(i=>i.addEventListener('input',e=>{clearTimeout(window._sq);
+    window._sq=setTimeout(()=>{S[e.target.dataset.ns][e.target.dataset.k]=e.target.value;render();},220);}));
+  $('#fCtx').textContent=NAMES[tab]||tab;}
+function resetPanel(){(SPEC[CURRENT]||[]).forEach(f=>{if(f.disabled)return;S[f.ns][f.k]=f.type==='search'?'':'all';});buildPanel(CURRENT);render();}
+function scopeLabel(){const b=[];
+  (SPEC[CURRENT]||[]).forEach(f=>{if(f.disabled)return;const v=S[f.ns][f.k];if(!v||v==='all')return;
+    if(f.k==='q')b.push('Q'+v);else if(f.k==='m')b.push(MN[+v]+' 2026');
+    else if(v==='__blank__')b.push(f.blank||'(blank)');
+    else if(f.type==='search')b.push(`${f.label}: “${v}”`);
+    else if(f.k==='name')b.push(trunc(v,46));
+    else if(['ts','rg','lang','cc','vdiv','vreg','org','au'].includes(f.k))b.push(`${f.label}: ${v}`);
+    else b.push(v);});
+  return b.length?b.join(' · '):'2026 YTD · all segments';}
+function kpis(id,items){$('#'+id).innerHTML=items.map(k=>
+  `<div class="kpi${k.hl?' hl':''}"><div class="k-l">${k.l}</div><div class="k-v">${k.v}</div><div class="k-s">${k.s||''}</div></div>`).join('');}
+function valBar(id,parts){$('#'+id).innerHTML=parts.map(p=>
+  `<span>${p.l}: <b>${p.v}</b>${p.tag&&p.tagTxt!=='none'?`<i class="rag ${p.tag}"></i>${p.tagTxt}`:''}</span>`).join('');}
+
+/* ==================== method note ==================== */
+function methodBox(a){
+  return`<div class="methodbox"><h4>How these rates are calculated &mdash; and the alternative we could switch to</h4>
+  <p>Every rate on this tab uses the <b>simple-average method</b>, so you can reconcile it by hand against the file.</p>
+  <div class="mrow"><div><div class="t1"><span class="tag top">In use</span> Simple average</div><div class="v1">${pct(a.open)} open · ${pct(a.cto)} CTO</div>
+    <div class="d1">Average the <code>Avg % unique opens</code> and <code>Avg % click-to-open rate</code> columns across the mailings in scope. Every mailing counts once, whatever its size. Open rate averages ${full(a.nOpen)} of ${full(a.n)} mailings; CTO averages ${full(a.nCto)} &mdash; the rest are blank in the file and are skipped.</div></div>
+  <div><div class="t1">Available &mdash; volume-weighted</div><div class="v1">${pct(a.wOpen)} open · ${pct(a.wCto)} CTO</div>
+    <div class="d1">Add up all opens and divide by all emails sent: <code>Σ #open ÷ Σ Emails sent</code>. A mailing to 130,000 people then counts 10,000× more than one to 13.</div></div></div>
+  <p><b>Why weighted is usually preferred.</b> It answers “across everything we sent, what share was opened?” &mdash; the true experience of the audience. The simple average answers “how did the typical mailing perform?”, which a handful of tiny mailings with near-100% open rates can inflate. The workbook's own Dashboard sheet uses the weighted method, so switching would align the two exactly.</p></div>`;}
+
+/* ==================== interpretation ==================== */
+const verdictTag=(v,cls)=>`<span class="verdict${cls?' '+cls:''}">${esc(v)}</span>`;
+function interpMail(a){
+  if(!a.n||a.open==null)return`<div class="interp"><div class="ih"><h4>What this pattern means</h4>${verdictTag('No signal')}</div><div class="lead">Not enough mailings in scope to read a pattern.</div></div>`;
+  const open=a.open,cto=a.cto==null?0:a.cto;
+  const inTenOpen=Math.round(open*10),oneInCto=cto?Math.round(1/cto):0;
+  let verdict,cls='',lead,points,report;
+  const hiOpen=open>=0.75,loOpen=open<0.60,hiCto=cto>=0.15,loCto=cto<0.06;
+  if(hiOpen&&hiCto){verdict='Strong on both';cls='good';
+    lead=`<b>${pct(open)}</b> of recipients opened, and <b>${pct(cto)}</b> of those who opened went on to click.`;
+    points=['<b>Lead with the pattern:</b> the subject line earns the open and the content earns the click &mdash; both halves of the funnel are working.',
+      `<b>Relevance:</b> roughly ${inTenOpen} in 10 recipients opened, which says the audience is well targeted rather than over-mailed.`,
+      `<b>Action orientation:</b> about 1 in ${oneInCto} openers clicked, so the call to action is visible and worth following.`,
+      '<b>What to do:</b> treat this as the template &mdash; reuse the structure, send timing and audience definition on comparable campaigns.'];
+    report=`“${inTenOpen} in 10 people opened, and 1 in ${oneInCto} of those clicked through.”`;}
+  else if(hiOpen&&loCto){verdict='Read but not acted on';cls='warn';
+    lead=`Opens are healthy at <b>${pct(open)}</b>, but only <b>${pct(cto)}</b> of openers clicked.`;
+    points=['<b>Lead with the pattern:</b> the subject line is doing its job; the content is not converting attention into action.',
+      '<b>Likely cause:</b> the message is being consumed in the preview &mdash; people read it and are done. Common and perfectly acceptable for announcements and FYI updates.',
+      `<b>If a click was the goal:</b> only about 1 in ${oneInCto||'–'} openers acted. Check that the call to action sits above the fold and that there is a single clear next step rather than several competing links.`,
+      '<b>Question to ask:</b> was this mailing meant to inform or to drive action? Judge it against that intent, not against the click rate alone.'];
+    report=`“${inTenOpen} in 10 opened, but the content was largely self-contained &mdash; few needed to click further.”`;}
+  else if(loOpen&&hiCto){verdict='Niche but committed';
+    lead=`Only <b>${pct(open)}</b> opened, yet <b>${pct(cto)}</b> of those who did went on to click.`;
+    points=['<b>Lead with the pattern:</b> a smaller slice of the audience is opening, but that slice is highly engaged &mdash; the content matters to the people it reaches.',
+      '<b>Likely cause:</b> the subject line or sender is not signalling relevance to the wider list, or the audience is broader than the topic warrants.',
+      '<b>What to do:</b> the content is working. Focus effort on the subject line and on tightening the distribution list rather than on the message itself.'];
+    report=`“Fewer people opened, but those who did were ${(cto/Math.max(open,0.001)).toFixed(1)}× more likely to act &mdash; this reached the right people.”`;}
+  else if(loOpen){verdict='Attention problem';cls='bad';
+    lead=`Open rate is <b>${pct(open)}</b> &mdash; below the level at which a mailing can be relied on to land.`;
+    points=['<b>Lead with the pattern:</b> the message is not being seen, so content quality is not yet the question.',
+      '<b>Likely causes:</b> subject line not signalling value, unfamiliar sender, send timing, or list fatigue from too-frequent mailing.',
+      `<b>Reality check:</b> roughly ${inTenOpen} in 10 recipients opened, so most of the audience never saw the content.`,
+      '<b>What to do:</b> test subject lines and send times before reworking the body. Consider whether the whole list needs this message.'];
+    report=`“Around ${inTenOpen} in 10 recipients opened &mdash; the message struggled to earn attention.”`;}
+  else{verdict='Solid, unremarkable';
+    lead=`<b>${pct(open)}</b> opened and <b>${pct(cto)}</b> of openers clicked &mdash; both in the normal working range.`;
+    points=['<b>Lead with the pattern:</b> a dependable performance with no clear weak link.',
+      `<b>Reach:</b> about ${inTenOpen} in 10 recipients opened${oneInCto?`, and roughly 1 in ${oneInCto} of those clicked`:''}.`,
+      '<b>What to do:</b> compare against the content type and audience size bands below to see whether this is strong or weak <em>for its class</em> &mdash; a 70% open to 130,000 people is a very different achievement from 70% to 13.'];
+    report=`“${inTenOpen} in 10 opened${oneInCto?`, and 1 in ${oneInCto} of those clicked through`:''}.”`;}
+  return`<div class="interp"><div class="ih"><h4>What this pattern means &mdash; email performance</h4>${verdictTag(verdict,cls)}</div>
+  <div class="lead">${lead}</div>
+  <div class="cmp"><div class="${hiOpen?'win':''}"><div class="m-l">Open rate</div><div class="m-v">${pct(open)}</div>
+      <div class="m-q">“Of the people we sent to, how many opened?”</div><div class="m-f">Simple average across ${full(a.nOpen)} mailings · measures whether the message earns attention</div></div>
+    <div class="${hiCto?'win':''}"><div class="m-l">Click-to-open</div><div class="m-v">${pct(cto)}</div>
+      <div class="m-q">“Of the people who opened, how many clicked?”</div><div class="m-f">Simple average across ${full(a.nCto)} mailings · measures whether the content earns action</div></div></div>
+  <ul>${points.map(p=>`<li>${p}</li>`).join('')}</ul>
+  <div class="rep"><b>How to report it</b>${report}</div>
+  <div class="note">Open rate and click-to-open answer different questions: one is about reach, the other about persuasion. A mailing can succeed on one and fail on the other, so read them together. Click-through (${pct(a.ctr,2)}) multiplies the two &mdash; of everyone sent to, the share who both opened and clicked.</div></div>`;}
+
+function interpVideo(V){
+  if(!V.length)return`<div class="interp"><div class="ih"><h4>What the engagement score means</h4>${verdictTag('No signal')}</div><div class="lead">No videos in scope.</div></div>`;
+  const eng=V.reduce((s,x)=>s+x.eng,0)/V.length;
+  const c1=V.reduce((s,x)=>s+x.c1,0),c100=V.reduce((s,x)=>s+x.c100,0),c50=V.reduce((s,x)=>s+x.c50,0);
+  const comp=c1?c100/c1:0,half=c1?c50/c1:0;
+  const all=DATA.vids.reduce((s,x)=>s+x.eng,0)/DATA.vids.length;
+  const best=V.slice().sort((a,b)=>b.eng-a.eng)[0];
+  const d=eng-all,vs=Math.abs(d)<0.25?'in line with':(d>0?'above':'below');
+  const cmp=V.length===DATA.vids.length?'the all-video average':`the ${all.toFixed(1)} across all videos`;
+  let verdict,cls='',points;
+  const lead=`Average engagement score is <b>${eng.toFixed(1)}</b>, ${vs} ${cmp}.`;
+  if(eng>=20){verdict='High engagement';cls='good';
+    points=['<b>What the score is:</b> a composite of how far through the video people watch and how much of it they actually consume &mdash; not simply how many pressed play.',
+      `<b>Reading it here:</b> ${pct(half)} of started views passed the halfway mark, so viewers are staying with the content rather than sampling it.`,
+      "<b>What it tells you:</b> length and pacing are matched to the audience's appetite. Videos scoring this well are worth studying for format, not just topic."];}
+  else if(eng>=10){verdict='Moderate engagement';
+    points=['<b>What the score is:</b> a composite of watch depth and completion &mdash; it rewards videos people stay with, not videos people merely open.',
+      `<b>Reading it here:</b> ${pct(half)} of started views reached halfway and ${pct(comp)} reached the end. A normal pattern: people give it a fair chance, and a meaningful share finish.`,
+      '<b>What it tells you:</b> the content holds up but has room to improve. Front-load the key message &mdash; the drop-off curve shows where attention is lost.'];}
+  else{verdict='Low engagement';cls='warn';
+    points=['<b>What the score is:</b> a composite of watch depth and completion, so a low value means people start but do not stay.',
+      `<b>Reading it here:</b> only ${pct(half)} of started views reached halfway and ${pct(comp)} reached the end &mdash; attention is being lost early.`,
+      '<b>What it tells you:</b> most often a length or opening problem rather than a topic problem. Check the drop-off curve for the exact quartile where viewers leave, and consider a shorter cut.'];}
+  return`<div class="interp"><div class="ih"><h4>What the engagement score means</h4>${verdictTag(verdict,cls)}</div>
+  <div class="lead">${lead}</div>
+  <div class="cmp"><div class="win"><div class="m-l">Engagement score</div><div class="m-v">${eng.toFixed(1)}</div>
+      <div class="m-q">“How deeply did people watch, not just how many pressed play?”</div><div class="m-f">Average across ${full(V.length)} videos in scope · all-video average is ${all.toFixed(1)}</div></div>
+    <div><div class="m-l">Completion rate</div><div class="m-v">${pct(comp)}</div>
+      <div class="m-q">“Of the views that actually started, how many reached the end?”</div><div class="m-f">${fmt(c100)} completions ÷ ${fmt(c1)} started views</div></div></div>
+  <ul>${points.map(p=>`<li>${p}</li>`).join('')}</ul>
+  ${best?`<div class="rep"><b>Best performer in scope</b>${esc(trunc(best.t,90))} &mdash; score ${best.eng.toFixed(1)}, ${pct(best.c1?best.c100/best.c1:0)} completion</div>`:''}
+  <div class="note">Views tell you reach; the engagement score tells you whether that reach was meaningful. A video with fewer views but a high score often did more work than a widely-opened one nobody finished. Completion is measured against <b>started views</b> (views at 1%), matching the workbook's definition.</div></div>`;}
+
+function interpret(ctvr,uctuvr,label,v,c,uv,ucl){
+  const gap=ctvr-uctuvr,rel=uctuvr>0?Math.abs(gap)/uctuvr:0;
+  const perClicker=ucl>0?c/ucl:0,oneIn=ctvr>0?Math.round(1/ctvr):0,inTen=Math.round(uctuvr*10);
+  const head=`<h4>What this pattern means${label?' &mdash; '+esc(label):''}</h4>`;
+  if(!v||!uv||(!c&&!ucl))return`<div class="interp"><div class="ih">${head}${verdictTag('No signal')}</div><div class="lead">Too little traffic in scope to read a pattern &mdash; ${fmt(v)} views and ${fmt(uv)} unique visitors.</div></div>`;
+  let verdict,lead,points,report;
+  if(rel<0.10){verdict='Balanced';
+    lead=`Interaction and conversion are effectively level &mdash; <b>${pct(ctvr)}</b> CTVR against <b>${pct(uctuvr)}</b> UCTUVR.`;
+    points=['<b>User behaviour:</b> simple and predictable. The page generates a healthy, straightforward interaction pattern.',
+      '<b>Decisive action vs. exploration:</b> visitors who engage generally take the intended action without creating large amounts of repeated clicking.',
+      '<b>Measuring success:</b> little difference between the number of people taking action and the number of actions generated &mdash; engagement is spread evenly, not concentrated among a few power users.'];
+    report=`“Roughly ${inTen} in 10 visitors clicked at least once, and the volume of clicks matches the number of clickers &mdash; around ${perClicker.toFixed(1)} clicks each.”`;}
+  else if(gap>0){verdict='Depth — power users';
+    lead=`Interaction rate is <b>${pct(ctvr)}</b> against a visitor conversion of <b>${pct(uctuvr)}</b> &mdash; CTVR leads by ${(Math.abs(gap)*100).toFixed(1)} points.`;
+    points=['<b>Lead with the pattern:</b> a smaller audience is generating lots of repeat interaction &mdash; power users.',
+      '<b>Decisive action vs. exploration:</b> this is exploratory behaviour &mdash; people navigating an ecosystem and accessing multiple resources in one visit.',
+      `<b>Measuring success:</b> the page reliably drives action, averaging ${perClicker.toFixed(1)} clicks per clicker. Best read as interaction efficiency &mdash; how consistently views generate clicks.`,
+      '<b>Typical of:</b> resource-heavy pages &mdash; articles, talking points, release notes, download hubs.'];
+    report=`“About 1 in ${oneIn} views resulted in a click, and those who clicked did so ${perClicker.toFixed(1)} times on average.”`;}
+  else{verdict='Breadth — one-time action';
+    lead=`Visitor conversion is <b>${pct(uctuvr)}</b> against an interaction rate of <b>${pct(ctvr)}</b> &mdash; UCTUVR leads by ${(Math.abs(gap)*100).toFixed(1)} points.`;
+    points=['<b>Lead with the pattern:</b> many first-time visitors clicked. The page serves a specific need once.',
+      '<b>Decisive action vs. exploration:</b> a clear, action-oriented one-way journey &mdash; those who came, clicked, and generally did not return.',
+      `<b>Measuring success:</b> ${inTen} in 10 visitors took action. For action-oriented pages a higher visitor conversion is the result to celebrate.`,
+      '<b>Typical of:</b> forms, login and registration pages, interactive tools. A lower figure here can simply mean users bookmarked the link.'];
+    report=`“${inTen} in 10 visitors took action, mostly clicking once rather than exploring further.”`;}
+  return`<div class="interp"><div class="ih">${head}${verdictTag(verdict)}</div>
+  <div class="lead">${lead}</div>
+  <div class="cmp"><div class="${gap>0&&rel>=0.10?'win':''}"><div class="m-l">CTVR · interaction rate</div><div class="m-v">${pct(ctvr)}</div>
+      <div class="m-q">“Across all page views, how often did a click happen?”</div><div class="m-f">${fmt(c)} clicks ÷ ${fmt(v)} views · measures how much engagement was generated overall</div></div>
+    <div class="${gap<0&&rel>=0.10?'win':''}"><div class="m-l">UCTUVR · visitor conversion rate</div><div class="m-v">${pct(uctuvr)}</div>
+      <div class="m-q">“Of the people who visited, how many clicked at least once?”</div><div class="m-f">${fmt(ucl)} unique clicks ÷ ${fmt(uv)} unique visitors · counted once per person however many times they click</div></div></div>
+  <ul>${points.map(p=>`<li>${p}</li>`).join('')}</ul>
+  <div class="rep"><b>How to report it</b>${report}</div>
+  <div class="note">Success is never one metric: interaction rate shows how consistently the page drove action; visitor conversion shows how many people acted.</div></div>`;}
+
+/* ==================== renderers ==================== */
+const miniBar=(v,mx)=>`<div class="mini"><i style="width:${(v/mx*100).toFixed(1)}%"></i></div>`;
+function renderOverview(){
+  const idx=mailIdx(),a=mailAgg(idx),f=S.ml;
+  const A=DATA.arts.filter(x=>(f.q==='all'||x.q==+f.q)&&(f.m==='all'||x.m==+f.m)&&
+    (f.pk==='all'||(f.pk==='__blank__'?!x.pk:x.pk===f.pk))&&(f.tcl==='all'||(f.tcl==='__blank__'?!x.tcl:x.tcl===f.tcl)));
+  const V=DATA.vids.filter(x=>(f.q==='all'||x.q==+f.q)&&(f.m==='all'||x.m==+f.m));
+  const av=A.reduce((s,x)=>s+x.v,0),vv_=V.reduce((s,x)=>s+x.v,0),vc1=V.reduce((s,x)=>s+x.c1,0),vc=V.reduce((s,x)=>s+x.c100,0);
+  const pv=DATA.pages.reduce((s,x)=>s+x.v,0);
+  kpis('ovKpi',[
+    {l:'Emails sent',v:fmt(a.es),s:`${full(a.ms)} mailings`,hl:true},
+    {l:'Open rate',v:pct(a.open),s:`simple avg · ${full(a.nOpen)} mailings`},
+    {l:'Click-to-open',v:pct(a.cto),s:`simple avg · ${full(a.nCto)} mailings`},
+    {l:'Unique clicks',v:fmt(a.uc),s:'mailing data'},
+    {l:'Article views',v:fmt(av),s:`${full(A.length)} articles`},
+    {l:'Video completion',v:pct(vc1?vc/vc1:0),s:`${fmt(vv_)} views`}]);
+  $('#ovScope').textContent=scopeLabel();
+  valBar('ovVal',[{l:'Mailings in scope',v:`${full(idx.length)} / ${full(DATA.src.mail)}`},
+    {l:'Articles',v:`${full(A.length)} / ${full(DATA.src.arts)}`},{l:'Videos',v:`${full(V.length)} / ${full(DATA.src.vids)}`},
+    {l:'Method',v:'Simple average',tag:'ok',tagTxt:'reconcilable by hand'}]);
+  const byM=groupMail(idx,'month'),order=uniq(M.m).map(m=>MN[m]);
+  const rows=order.map(l=>byM.find(r=>r.l===l)||{l,es:0,open:null});
+  comboChart('cOvTrend',rows.map(r=>r.l),rows.map(r=>r.es),rows.map(r=>r.open),{barLabel:'Emails sent',lineLabel:'Open rate'});
+  const mixTot=a.op+av+vv_+pv||1;
+  hBar('cOvMix',[{l:'Email opens',v:a.op,note:pct(a.op/mixTot,1)+' of touchpoints'},
+    {l:'Click-tracked page views',v:pv,note:pct(pv/mixTot,1)+' of touchpoints'},
+    {l:'Article views',v:av,note:pct(av/mixTot,1)+' of touchpoints'},
+    {l:'Video views',v:vv_,note:pct(vv_/mixTot,1)+' of touchpoints'}].sort((x,y)=>y.v-x.v),{rowH:34,labelW:170});
+  hBar('cOvDiv',groupMail(idx,'div').sort((x,y)=>y.es-x.es).map(r=>({l:r.l,v:r.es})),{limit:8,labelW:150});
+  hBar('cOvCto',groupMail(idx,'ct').filter(r=>r.ms>=20&&r.cto!=null).sort((x,y)=>y.cto-x.cto)
+    .map(r=>({l:r.l,v:r.cto,note:`${full(r.ms)} mailings`})),{limit:8,fmt:v=>pct(v),labelW:150});
+  hBar('cOvPack',groupMail(idx,'pk').filter(r=>r.l!=='(No pack)').sort((x,y)=>y.es-x.es)
+    .map(r=>({l:r.l,v:r.es,note:`${full(r.ms)} mailings · open ${pct(r.open)}`})),{limit:8,labelW:150});
+  const ct=groupMail(idx,'ct').filter(r=>r.ms>=25&&r.cto!=null);
+  const best=ct.slice().sort((x,y)=>y.cto-x.cto)[0],worst=ct.slice().sort((x,y)=>x.cto-y.cto)[0];
+  const cl=groupMail(idx,'cl').filter(r=>r.ms>=20&&r.open!=null).sort((x,y)=>y.open-x.open);
+  const pks=groupMail(idx,'pk').filter(r=>r.l!=='(No pack)'&&r.ms>=3&&r.cto!=null).sort((x,y)=>y.cto-x.cto);
+  const topArt=A.slice().sort((x,y)=>y.v-x.v)[0];const li=[];
+  if(best&&worst&&worst.cto>0&&best!==worst)li.push(`<b>${esc(best.l)}</b> converts best at ${pct(best.cto)} click-to-open, against <b>${esc(worst.l)}</b> at ${pct(worst.cto)} &mdash; a ${(best.cto/worst.cto).toFixed(1)}× gap on comparable volume.`);
+  if(cl.length>1)li.push(`Smaller audiences hold attention: <b>${esc(cl[0].l)}</b> opens at ${pct(cl[0].open)} versus ${pct(cl[cl.length-1].open)} for <b>${esc(cl[cl.length-1].l)}</b>.`);
+  if(pks.length)li.push(`Best-converting pack: <b>${esc(pks[0].l)}</b> at ${pct(pks[0].cto)} click-to-open across ${full(pks[0].ms)} mailings.`);
+  if(topArt)li.push(`Best-read article: <b>${esc(topArt.t)}</b> &mdash; ${fmt(topArt.v)} views, published ${esc(topArt.ds||MN[topArt.m]+' 2026')}.`);
+  if(V.length)li.push(`Video completion is ${pct(vc1?vc/vc1:0)} of started views across ${full(V.length)} assets.`);
+  $('#ovInsights').innerHTML=li.length?'<ul style="margin:6px 0 0;padding-left:18px">'+li.map(x=>`<li style="margin-bottom:7px">${x}</li>`).join('')+'</ul>':'<div class="note">No signals in the current scope.</div>';}
+
+function renderMailings(){
+  const idx=mailIdx(),a=mailAgg(idx);
+  $('#mlScope').textContent=scopeLabel();
+  kpis('mlKpi',[
+    {l:'Mailings sent',v:full(a.ms),s:`${full(idx.length)} records`,hl:true},
+    {l:'Emails sent',v:fmt(a.es),s:`avg ${full(a.ms?a.es/a.ms:0)} per mailing`},
+    {l:'Open rate',v:pct(a.open),s:`simple avg of ${full(a.nOpen)} mailings`},
+    {l:'Click-to-open',v:pct(a.cto),s:`simple avg of ${full(a.nCto)} mailings`},
+    {l:'Click-through',v:pct(a.ctr,2),s:`simple avg of ${full(a.nCtr)} mailings`},
+    {l:'Unique clicks',v:fmt(a.uc),s:'sum of #unique clicks'}]);
+  valBar('mlVal',[{l:'Rows in scope',v:`${full(idx.length)} / ${full(DATA.src.mail)}`},
+    {l:'Blank open %',v:full(a.n-a.nOpen),tag:a.n-a.nOpen?'warn':'ok',tagTxt:a.n-a.nOpen?'excluded from average':'none'},
+    {l:'Blank CTO %',v:full(a.n-a.nCto),tag:a.n-a.nCto?'warn':'ok',tagTxt:a.n-a.nCto?'excluded from average':'none'},
+    {l:'Method',v:'Simple average'}]);
+  $('#mlInterp').innerHTML=interpMail(a);
+  $('#mlMethod').innerHTML=methodBox(a);
+  const byM=groupMail(idx,'month'),order=uniq(M.m).map(m=>MN[m]);
+  const rows=order.map(l=>byM.find(r=>r.l===l)||{l,open:null,cto:null});
+  groupCols('cMlRates',rows.map(r=>r.l),rows.map(r=>r.open),rows.map(r=>r.cto),{fmtAxis:v=>pct(v,0),fmtTip:v=>pct(v),labelA:'Open rate',labelB:'Click-to-open'});
+  bubbles('cMlCluster',groupMail(idx,'cl').filter(r=>r.ms>=5&&r.open!=null).sort((x,y)=>(x.es/x.ms)-(y.es/y.ms))
+    .map(r=>({l:r.l,x:r.ms?r.es/r.ms:0,y:r.open,r:r.ms})));
+  hBar('cMlCT',groupMail(idx,'ct').filter(r=>r.ms>=10&&r.open!=null).sort((x,y)=>y.open-x.open)
+    .map(r=>({l:r.l,v:r.open,note:`${fmt(r.es)} emails · avg of ${full(r.po.length)} mailings`})),{limit:9,fmt:v=>pct(v),labelW:200});
+  hBar('cMlPack',groupMail(idx,'pk').filter(r=>r.l!=='(No pack)'&&r.ms>=2&&r.cto!=null).sort((x,y)=>y.cto-x.cto)
+    .map(r=>({l:r.l,v:r.cto,note:`${full(r.ms)} mailings · ${fmt(r.es)} emails · open ${pct(r.open)}`})),{limit:9,fmt:v=>pct(v),labelW:230});
+  renderMailTable(idx);}
+let mlSort={k:'es',dir:-1};
+function renderMailTable(idx){idx=idx||mailIdx();
+  let rows=idx.map(i=>({t:M.t[i],div:DIM.div[M.cols.div[i]],ct:DIM.ct[M.cols.ct[i]],m:M.m[i],
+    pk:DIM.pk[M.cols.pk[i]]||'—',tcl:DIM.tcl[M.cols.tcl[i]]||'—',es:M.es[i],uc:M.uc[i],open:M.po[i],cto:M.pc[i]}));
+  rows.sort((x,y)=>{const A=x[mlSort.k],B=y[mlSort.k];if(A==null)return 1;if(B==null)return -1;return(A>B?1:A<B?-1:0)*mlSort.dir;});
+  rows=rows.slice(0,40);const mx=Math.max(...rows.map(r=>r.es),1);
+  const cols=[['t','Title'],['div','Division'],['ct','Type'],['pk','Pack'],['tcl','Cluster'],['m','Month'],
+    ['es','Emails','num'],['open','Open','num'],['cto','CTO','num'],['uc','Unique clicks','num']];
+  $('#tMl').innerHTML='<thead><tr>'+cols.map(c=>`<th class="sortable ${c[2]||''}" data-k="${c[0]}">${c[1]}${mlSort.k===c[0]?(mlSort.dir<0?' ↓':' ↑'):''}</th>`).join('')+'</tr></thead><tbody>'+
+    rows.map(r=>`<tr><td class="t">${esc(r.t)}${miniBar(r.es,mx)}</td><td>${esc(r.div)}</td><td><span class="tag">${esc(r.ct)}</span></td>
+    <td class="t" title="${esc(r.pk)}">${esc(trunc(r.pk,34))}</td><td class="t" title="${esc(r.tcl)}">${esc(trunc(r.tcl,22))}</td><td>${MN[r.m]}</td>
+    <td class="num">${full(r.es)}</td><td class="num">${pct(r.open)}</td><td class="num">${pct(r.cto)}</td><td class="num">${full(r.uc)}</td></tr>`).join('')+'</tbody>';
+  $$('#tMl th').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;
+    mlSort={k,dir:mlSort.k===k?-mlSort.dir:-1};renderMailTable();}));}
+
+function renderArticles(){
+  const A=artsF(),v=A.reduce((s,x)=>s+x.v,0),li=A.reduce((s,x)=>s+x.li,0),co=A.reduce((s,x)=>s+x.co,0);
+  const hc=DATA.hcGeduld[S.ref]||0,one=A.length===1?A[0]:null;
+  const hcOne=one?(DATA.hcGeduld['2026-'+String(one.m).padStart(2,'0')]||0):0;
+  $('#arScope').textContent=scopeLabel();
+  kpis('arKpi',[
+    {l:'Articles published',v:full(A.length),s:'in scope',hl:true},
+    {l:'Article views',v:fmt(v),s:`avg ${full(A.length?v/A.length:0)} per article`},
+    {l:'Avg views / article',v:full(A.length?v/A.length:0),s:'mean across scope'},
+    {l:one?'Reach (this article)':'Best article reach',
+      v:one?(hcOne?pct(one.uv/hcOne,2):'n/a'):(hc&&A.length?pct(Math.max(...A.map(x=>x.uv))/hc,2):'n/a'),
+      s:one?`UV / HC of ${MN[one.m]} 2026`:`vs HC of ${S.ref}`},
+    {l:'Likes',v:full(li),s:'total reactions'},
+    {l:'Comments',v:full(co),s:'total replies'}]);
+  $('#arFlag').innerHTML='<b>Unique visitors is not shown as a total.</b> Unique visitors cannot be summed across articles &mdash; the same person reading three articles would be counted three times, overstating audience. It is shown per article in the table and used for per-article reach, but never aggregated. A de-duplicated figure would have to come from the source platform.';
+  valBar('arVal',[{l:'Rows in scope',v:`${full(A.length)} / ${full(DATA.src.arts)}`},
+    {l:'Reach basis',v:one?`${MN[one.m]} 2026 headcount`:`${S.ref} headcount`},
+    {l:'Sum of UV',v:'suppressed',tag:'warn',tagTxt:'not additive'}]);
+  $('#arSel').innerHTML=one?`<div class="methodbox"><h4>${esc(one.t)}</h4>
+    <div class="mrow"><div><div class="t1">Published</div><div class="v1">${esc(one.ds||MN[one.m]+' 2026')}</div>
+      <div class="d1">Reach below uses the Geduld internal headcount for <b>${MN[one.m]} 2026</b> (${fmt(hcOne)}), matching the publishing month.</div></div>
+    <div><div class="t1">Author</div><div class="v1" style="font-size:15px">${esc(one.au)}</div><div class="d1">${esc(one.th)}${one.pk?' · pack: '+esc(one.pk):''}</div></div></div>
+    <p style="margin-bottom:0"><b>${fmt(one.v)}</b> views · <b>${fmt(one.uv)}</b> unique visitors · reach <b>${hcOne?pct(one.uv/hcOne,2):'n/a'}</b> of internal headcount · ${full(one.li)} likes, ${full(one.co)} comments.</p></div>`:'';
+  const months=uniq(A.map(a=>a.m)),agg=m=>A.filter(a=>a.m===m);
+  comboChart('cArTrend',months.map(m=>MN[m]),months.map(m=>agg(m).reduce((s,x)=>s+x.v,0)),null,{barLabel:'Views'});
+  const avgR=[],bestR=[];
+  months.forEach(m=>{const h=DATA.hcGeduld['2026-'+String(m).padStart(2,'0')]||0,set=agg(m);
+    avgR.push(h&&set.length?set.reduce((s,x)=>s+x.uv,0)/set.length/h:0);
+    bestR.push(h&&set.length?Math.max(...set.map(x=>x.uv))/h:0);});
+  groupCols('cArReach',months.map(m=>MN[m]),avgR,bestR,{fmtAxis:x=>pct(x,0),fmtTip:x=>pct(x,2),labelA:'Average article',labelB:'Best article'});
+  const byF=(k,min=1)=>{const g={};A.forEach(a=>{const o=g[a[k]]=g[a[k]]||{uv:0,n:0};o.uv+=a.uv;o.n++;});
+    return Object.entries(g).filter(([,o])=>o.n>=min).map(([l,o])=>({l,v:o.uv/o.n,note:`${o.n} articles`})).sort((x,y)=>y.v-x.v);};
+  const byTag=(min=1)=>{const g={};A.forEach(a=>(a.tp.length?a.tp:['(Untagged)']).forEach(t=>{const o=g[t]=g[t]||{uv:0,n:0};o.uv+=a.uv;o.n++;}));
+    return Object.entries(g).filter(([,o])=>o.n>=min).map(([l,o])=>({l,v:o.uv/o.n,note:`${o.n} articles`})).sort((x,y)=>y.v-x.v);};
+  hBar('cArTheme',byF('th'),{limit:8,fmt:x=>full(x),labelW:180});
+  hBar('cArTopic',byTag(2),{limit:8,fmt:x=>full(x),labelW:210});
+  hBar('cArAuthor',byF('au',3),{limit:8,fmt:x=>full(x),labelW:180});
+  hBar('cArChan',byF('ch',3),{limit:8,fmt:x=>full(x),labelW:230});
+  const rows=A.slice().sort((a,b)=>b.v-a.v).slice(0,30),mx=Math.max(...rows.map(r=>r.v),1);
+  $('#tAr').innerHTML='<thead><tr><th>Article</th><th>Published</th><th>Author</th><th>Theme</th><th>Topic tags</th><th>Pack</th><th class="num">Views</th><th class="num">Unique (per article)</th><th class="num">Reach</th><th class="num">Reactions</th></tr></thead><tbody>'+
+    rows.map(r=>{const h=DATA.hcGeduld['2026-'+String(r.m).padStart(2,'0')]||0;
+      return`<tr><td class="t">${esc(r.t)}${r.ts==='Yes'?' <span class="tag top">Top story</span>':''}${miniBar(r.v,mx)}</td>
+      <td>${esc(r.ds||MN[r.m]+' 2026')}</td><td>${esc(r.au)}</td><td>${esc(r.th)}</td>
+      <td class="t">${r.tp.length?r.tp.map(t=>`<span class="tag">${esc(t)}</span>`).join(''):'—'}</td><td class="t">${esc(trunc(r.pk||'—',28))}</td>
+      <td class="num">${full(r.v)}</td><td class="num">${full(r.uv)}</td><td class="num">${h?pct(r.uv/h,2):'—'}</td><td class="num">${full(r.li+r.co)}</td></tr>`;}).join('')+'</tbody>';}
+
+const short=u=>{const s=String(u).replace(/^https?:\/\//,'').replace(/\/$/,'');const p=s.split('/');return decodeURIComponent(p[p.length-1]||p[p.length-2]||s);};
+function renderPages(){
+  const P=pgLevelF(),D=pgDivF(),R=pgRegF();
+  const uv=P.reduce((s,x)=>s+x.uv,0),v=P.reduce((s,x)=>s+x.v,0),vis=P.reduce((s,x)=>s+x.vis,0);
+  const uvy=P.reduce((s,x)=>s+x.uvy,0),vy=P.reduce((s,x)=>s+x.vy,0);
+  $('#pgScope').textContent=scopeLabel();
+  kpis('pgKpi',[
+    {l:'Pages in scope',v:full(P.length),s:'page-level records',hl:true},
+    {l:'Unique visitors',v:fmt(uv),s:`${fmt(uvy)} YTD`},
+    {l:'Views',v:fmt(v),s:`${fmt(vy)} YTD`},
+    {l:'Visits',v:fmt(vis),s:`${(uv?vis/uv:0).toFixed(1)} per visitor`},
+    {l:'Views per visitor',v:(uv?v/uv:0).toFixed(1),s:'repeat-visit intensity'}]);
+  const vr=S.pg.vreg!=='all',vd=S.pg.vdiv!=='all';
+  const srcReg=vr?DATA.pgReg.filter(p=>p.sp===S.pg.vreg).length:DATA.pgReg.length;
+  const srcDiv=vd?DATA.pgDiv.filter(p=>p.sp===S.pg.vdiv).length:DATA.pgDiv.length;
+  valBar('pgVal',[{l:'Pages in scope',v:`${full(P.length)} / ${full(DATA.src.pgLevel)}`},
+    {l:'Regional split rows',v:`${full(R.length)} / ${full(srcReg)}`,tag:R.length===srcReg?'ok':'warn',tagTxt:R.length===srcReg?'matches source':'filtered further'},
+    {l:'Divisional split rows',v:`${full(D.length)} / ${full(srcDiv)}`,tag:D.length===srcDiv?'ok':'warn',tagTxt:D.length===srcDiv?'matches source':'filtered further'},
+    {l:'Visitor slicers',v:vr||vd?'restricting all views':'not applied'}]);
+  hBar('cPgTop',P.slice().sort((a,b)=>b.uv-a.uv).map(p=>({l:short(p.url),v:p.uv,note:`${p.th} · ${fmt(p.v)} views`})),{limit:10,labelW:210});
+  hBar('cPgInt',P.filter(p=>p.uv>=50).map(p=>({l:short(p.url),v:p.v/p.uv,note:`${fmt(p.uv)} UV · ${fmt(p.v)} views`})).sort((a,b)=>b.v-a.v),
+    {limit:10,fmt:x=>x.toFixed(1)+'×',labelW:210});
+  const grp=rows=>{const g={};rows.forEach(p=>g[p.sp]=(g[p.sp]||0)+p.uv);return Object.entries(g).map(([l,v])=>({l,v})).sort((a,b)=>b.v-a.v);};
+  hBar('cPgDiv',grp(D),{limit:8,labelW:200});hBar('cPgReg',grp(R),{limit:8,labelW:180});
+  const byF=k=>{const g={};P.forEach(p=>{const o=g[p[k]]=g[p[k]]||{uv:0,n:0};o.uv+=p.uv;o.n++;});
+    return Object.entries(g).map(([l,o])=>({l,v:o.uv/o.n,note:`${o.n} pages`})).sort((a,b)=>b.v-a.v);};
+  hBar('cPgTheme',byF('th'),{limit:8,fmt:x=>full(x),labelW:190});
+  hBar('cPgCt',byF('ct'),{limit:8,fmt:x=>full(x),labelW:190});
+  const rows=P.slice().sort((a,b)=>b.uv-a.uv),mx=Math.max(...rows.map(r=>r.uv),1);
+  $('#tPg').innerHTML='<thead><tr><th>Page</th><th>Division owner</th><th>Theme</th><th>Content type</th><th>Target region</th><th class="num">Unique</th><th class="num">Visits</th><th class="num">Views</th><th class="num">Views/UV</th><th class="num">UV YTD</th><th class="num">Views YTD</th></tr></thead><tbody>'+
+    rows.map(r=>`<tr><td class="t" title="${esc(r.url)}">${esc(short(r.url))}${miniBar(r.uv,mx)}</td><td>${esc(r.div)}</td><td>${esc(r.th)}</td><td>${esc(r.ct)}</td><td>${esc(r.rg)}</td>
+    <td class="num">${full(r.uv)}</td><td class="num">${full(r.vis)}</td><td class="num">${full(r.v)}</td><td class="num">${(r.uv?r.v/r.uv:0).toFixed(1)}×</td>
+    <td class="num">${full(r.uvy)}</td><td class="num">${full(r.vy)}</td></tr>`).join('')+'</tbody>';}
+
+function renderVideos(){
+  const V=vidsF(),v=V.reduce((s,x)=>s+x.v,0),uv=V.reduce((s,x)=>s+x.uv,0);
+  const c100=V.reduce((s,x)=>s+x.c100,0),c1=V.reduce((s,x)=>s+x.c1,0);
+  const eng=V.length?V.reduce((s,x)=>s+x.eng,0)/V.length:0;
+  $('#vdScope').textContent=scopeLabel();
+  kpis('vdKpi',[
+    {l:'Videos in scope',v:full(V.length),s:'assets',hl:true},
+    {l:'Video views',v:fmt(v),s:`${fmt(uv)} unique visitors`},
+    {l:'Started views',v:fmt(c1),s:'views reaching 1%'},
+    {l:'Completions',v:fmt(c100),s:'views at 100%'},
+    {l:'Completion rate',v:pct(c1?c100/c1:0),s:'of started views'},
+    {l:'Avg engagement score',v:eng.toFixed(1),s:'platform metric'}]);
+  const gc1=DATA.vids.reduce((s,x)=>s+x.c1,0),gc100=DATA.vids.reduce((s,x)=>s+x.c100,0);
+  valBar('vdVal',[{l:'Rows in scope',v:`${full(V.length)} / ${full(DATA.src.vids)}`},
+    {l:'Completion basis',v:'views at 1% (started)',tag:'ok',tagTxt:'matches workbook'},
+    {l:'Group benchmark',v:pct(gc1?gc100/gc1:0)}]);
+  $('#vdInterp').innerHTML=interpVideo(V);
+  const months=uniq(V.map(x=>x.m));
+  groupCols('cVdTrend',months.map(m=>MN[m]),months.map(m=>V.filter(x=>x.m===m).reduce((s,x)=>s+x.v,0)),
+    months.map(m=>V.filter(x=>x.m===m).reduce((s,x)=>s+x.c100,0)),{labelA:'Views',labelB:'Completions'});
+  const base=c1||1;
+  hBar('cVdFunnel',[['Started (1%)',c1],['25% watched',V.reduce((s,x)=>s+x.c25,0)],['50% watched',V.reduce((s,x)=>s+x.c50,0)],
+    ['75% watched',V.reduce((s,x)=>s+x.c75,0)],['Completed',c100]].map(([l,val])=>({l,v:val/base,note:`${fmt(val)} views`})),
+    {fmt:x=>pct(x,1),rowH:30,limit:5,labelW:130});
+  const d={};V.forEach(x=>{const o=d[x.div]=d[x.div]||{c1:0,c:0,n:0,e:0};o.c1+=x.c1;o.c+=x.c100;o.n++;o.e+=x.eng;});
+  hBar('cVdDiv',Object.entries(d).filter(([,o])=>o.n>=5).map(([l,o])=>({l,v:o.c1?o.c/o.c1:0,note:`${o.n} videos · ${fmt(o.c1)} started`})).sort((a,b)=>b.v-a.v),
+    {limit:8,fmt:x=>pct(x,0),labelW:180});
+  hBar('cVdEng',Object.entries(d).filter(([,o])=>o.n>=5).map(([l,o])=>({l,v:o.e/o.n,note:`${o.n} videos`})).sort((a,b)=>b.v-a.v),
+    {limit:8,fmt:x=>x.toFixed(1),labelW:180});
+  const rows=V.slice().sort((a,b)=>b.v-a.v).slice(0,30),mx=Math.max(...rows.map(r=>r.v),1);
+  $('#tVd').innerHTML='<thead><tr><th>Video</th><th>Owner</th><th>Lang</th><th>Month</th><th class="num">Views</th><th class="num">Started</th><th class="num">Completion</th><th class="num">Engagement</th></tr></thead><tbody>'+
+    rows.map(r=>`<tr><td class="t">${esc(r.t)}${miniBar(r.v,mx)}</td><td>${esc(r.div)}</td><td>${esc(r.lang)}</td><td>${MN[r.m]}</td>
+    <td class="num">${full(r.v)}</td><td class="num">${full(r.c1)}</td><td class="num">${pct(r.c1?r.c100/r.c1:0,0)}</td><td class="num">${(r.eng||0).toFixed(1)}</td></tr>`).join('')+'</tbody>';}
+
+function renderClicks(){
+  const P=pagesF(),L=linksF();
+  const v=P.reduce((s,x)=>s+x.v,0),uv=P.reduce((s,x)=>s+x.uv,0),c=P.reduce((s,x)=>s+x.c,0),ucl=P.reduce((s,x)=>s+x.ucl,0),d=P.reduce((s,x)=>s+x.d,0);
+  const ctvr=v?c/v:0,uctuvr=uv?ucl/uv:0;
+  $('#clScope').textContent=scopeLabel()+' · cumulative export, no date dimension';
+  kpis('clKpi',[
+    {l:'Page views',v:fmt(v),s:`${full(P.length)} pages`,hl:true},
+    {l:'Unique visitors',v:fmt(uv),s:`${(uv?v/uv:0).toFixed(1)} views each`},
+    {l:'CTVR',v:pct(ctvr),s:`${fmt(c)} clicks / ${fmt(v)} views`},
+    {l:'UCTUVR',v:pct(uctuvr),s:`${fmt(ucl)} unique clicks / ${fmt(uv)} UV`},
+    {l:'Downloads',v:fmt(d),s:'documents pulled'},
+    {l:'Tracked links',v:full(L.length),s:`${fmt(L.reduce((s,x)=>s+x.c,0))} clicks`}]);
+  valBar('clVal',[{l:'Pages in scope',v:`${full(P.length)} / ${full(DATA.src.pages)}`},
+    {l:'Links in scope',v:`${full(L.length)} / ${full(DATA.src.links)}`},
+    {l:'Reach',v:'not applied',tag:'ok',tagTxt:'no date dimension'}]);
+  const single=S.cl.url!=='all'||P.length===1;
+  $('#clInterp').innerHTML=P.length?interpret(ctvr,uctuvr,single?P[0].p:'',v,c,uv,ucl)
+    :'<div class="interp"><div class="lead">No pages match the current filters.</div></div>';
+  hBar('cClPages',P.slice().sort((a,b)=>b.v-a.v).map(p=>({l:p.p,v:p.v,note:p.site})),{limit:10,labelW:190});
+  pairBar('cClCtr',P.filter(p=>p.uv>=500).map(p=>({l:p.p,a:p.v?p.c/p.v:0,b:p.uv?p.ucl/p.uv:0}))
+    .sort((x,y)=>Math.max(y.a,y.b)-Math.max(x.a,x.b)),{limit:9,labA:'CTVR',labB:'UCTUVR',labelW:200});
+  const rows=P.slice().sort((a,b)=>b.v-a.v);
+  $('#tCl').innerHTML='<thead><tr><th>Site</th><th>Page</th><th>Page URL</th><th class="num">Views</th><th class="num">Unique</th><th class="num">Clicks</th><th class="num">Unique clicks</th><th class="num">Downloads</th><th class="num">CTVR</th><th class="num">UCTUVR</th></tr></thead><tbody>'+
+    rows.map(r=>`<tr><td>${esc(r.site)}</td><td>${esc(r.p)}</td><td class="u">${esc(r.url)}</td>
+    <td class="num">${full(r.v)}</td><td class="num">${full(r.uv)}</td><td class="num">${full(r.c)}</td><td class="num">${full(r.ucl)}</td><td class="num">${full(r.d)}</td>
+    <td class="num">${pct(r.v?r.c/r.v:0)}</td><td class="num">${pct(r.uv?r.ucl/r.uv:0)}</td></tr>`).join('')+'</tbody>';
+  const LT=L.slice().sort((a,b)=>b.c-a.c).slice(0,25);
+  $('#tLk').innerHTML='<thead><tr><th>Link title</th><th>Page</th><th>Destination URL</th><th class="num">Clicks</th><th class="num">Unique</th><th class="num">Downloads</th></tr></thead><tbody>'+
+    (LT.length?LT.map(r=>`<tr><td class="t">${esc(r.t)}</td><td>${esc(r.p)}</td><td class="u">${esc(r.dest)}</td>
+    <td class="num">${full(r.c)}</td><td class="num">${full(r.ucl)}</td><td class="num">${full(r.d)}</td></tr>`).join('')
+    :'<tr><td colspan="6" style="color:var(--grey-4);padding:20px">No links match the current filters.</td></tr>')+'</tbody>';}
+
+function renderBreakdown(){
+  const dim=$('#exDim').value,metric=$('#exMetric').value,top=+$('#exTop').value;
+  const idx=mailIdx(),g=groupMail(idx,dim),isRate=['open','cto','ctr'].includes(metric);
+  $('#bkScope')&&($('#bkScope').textContent=scopeLabel());
+  hBar('cEx',g.filter(r=>r[metric]!=null).sort((a,b)=>b[metric]-a[metric]).slice(0,top)
+    .map(r=>({l:r.l,v:r[metric],note:`${full(r.ms)} mailings · ${fmt(r.es)} emails`})),
+    {limit:top,fmt:isRate?(v=>pct(v)):(v=>fmt(v)),rowH:24,labelW:250});
+  $('#exNote').innerHTML=TAGDIM[dim]
+    ?`Any-match: a mailing carrying several ${dim==='th'?'themes':'topics'} counts under each one, so rows sum to more than the ${full(idx.length)} mailings in scope.`
+    :(dim==='div'?'Division uses <b>Corp Comms KPI reporting</b>. Rows with no KPI value split into “Non Corp Comms” and “Corp Comms – unmapped”.'
+    :(dim==='pk'||dim==='tcl'?'Pack and cluster names come from the long-term plan pack list, joined on tracking ID.':''));
+  const all=g.slice().sort((a,b)=>b.es-a.es);
+  $('#tEx').innerHTML=`<thead><tr><th>${esc($('#exDim').selectedOptions[0].text)}</th><th class="num">Mailings</th><th class="num">Emails</th><th class="num">Avg audience</th><th class="num">Open</th><th class="num">CTO</th><th class="num">CTR</th><th class="num">Unique clicks</th></tr></thead><tbody>`+
+    all.map(r=>`<tr><td class="t" title="${esc(r.l)}">${esc(trunc(r.l,52))}</td><td class="num">${full(r.ms)}</td><td class="num">${full(r.es)}</td>
+    <td class="num">${fmt(r.ms?r.es/r.ms:0)}</td><td class="num">${pct(r.open)}</td><td class="num">${pct(r.cto)}</td><td class="num">${pct(r.ctr,2)}</td><td class="num">${full(r.uc)}</td></tr>`).join('')+'</tbody>';}
+
+/* ==================== export ==================== */
+function csv(rows){const blob=new Blob([rows.map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='comms_'+CURRENT+'_export.csv';a.click();}
+function exportCsv(){
+  if(CURRENT==='articles'){
+    csv([['article','published','author','overtitle','theme','topic_tags','top_story','region','channel','pack','cluster','tracking_id','views','unique_visitors_per_article','likes','comments']]
+      .concat(artsF().map(a=>[a.t,a.ds||MN[a.m]+' 2026',a.au,a.ov,a.th,a.tp.join('; '),a.ts,a.rg,a.ch,a.pk,a.tcl,a.tid,a.v,a.uv,a.li,a.co])));}
+  else if(CURRENT==='videos'){
+    csv([['video','owner','language','month','views','started_views','completions','completion_rate_of_started_pct','engagement']]
+      .concat(vidsF().map(v=>[v.t,v.div,v.lang,MN[v.m],v.v,v.c1,v.c100,(v.c1?v.c100/v.c1*100:0).toFixed(2),(v.eng||0).toFixed(2)])));}
+  else if(CURRENT==='clicks'){
+    csv([['site','page','page_url','views','unique_visitors','clicks','unique_clicks','downloads','ctvr_pct','uctuvr_pct']]
+      .concat(pagesF().map(p=>[p.site,p.p,p.url,p.v,p.uv,p.c,p.ucl,p.d,(p.v?p.c/p.v*100:0).toFixed(2),(p.uv?p.ucl/p.uv*100:0).toFixed(2)])));}
+  else if(CURRENT==='pages'){
+    csv([['site','division_owner','page_url','content_type','overtitle','theme','topic_tags','target_org','target_region','unique_visitors','visits','views','views_per_uv','uv_ytd','views_ytd','likes','comments']]
+      .concat(pgLevelF().map(p=>[p.site,p.div,p.url,p.ct,p.ov,p.th,p.tp.join('; '),p.org,p.rg,p.uv,p.vis,p.v,(p.uv?p.v/p.uv:0).toFixed(2),p.uvy,p.vy,p.li,p.co])));}
+  else{const dim=CURRENT==='breakdown'?$('#exDim').value:'div';
+    csv([['dimension','mailings','emails_sent','opens','unique_clicks','open_rate_simple_avg_pct','click_to_open_simple_avg_pct','click_through_simple_avg_pct','open_rate_weighted_pct','cto_weighted_pct']]
+      .concat(groupMail(mailIdx(),dim).map(r=>[r.l,r.ms,r.es,r.op,r.uc,r.open==null?'':(r.open*100).toFixed(2),r.cto==null?'':(r.cto*100).toFixed(2),
+        r.ctr==null?'':(r.ctr*100).toFixed(2),(r.wOpen*100).toFixed(2),(r.wCto*100).toFixed(2)])));}}
+
+/* ==================== boot ==================== */
+function rowCount(){
+  if(CURRENT==='articles')return full(artsF().length)+' / '+full(DATA.src.arts)+' articles';
+  if(CURRENT==='videos')return full(vidsF().length)+' / '+full(DATA.src.vids)+' videos';
+  if(CURRENT==='clicks')return full(pagesF().length)+' / '+full(DATA.src.pages)+' pages';
+  if(CURRENT==='pages')return full(pgLevelF().length)+' / '+full(DATA.src.pgLevel)+' pages';
+  return full(mailIdx().length)+' / '+full(DATA.src.mail)+' mailings';}
+function render(){$('#fCount').textContent=rowCount();$('#hScope').textContent=scopeLabel();$('#hRef').textContent=S.ref;
+  ({overview:renderOverview,mailings:renderMailings,articles:renderArticles,pages:renderPages,
+    videos:renderVideos,clicks:renderClicks,breakdown:renderBreakdown})[CURRENT]();}
+function setTopH(){document.documentElement.style.setProperty('--topH',$('.topbar').offsetHeight+'px');}
+function init(){
+  const refs=Object.keys(DATA.hcDash).filter(k=>DATA.hcGeduld[k]).sort();
+  if(!refs.includes(S.ref))S.ref=refs[refs.length-1]||S.ref;
+  $('#fRef').innerHTML=refs.map(k=>`<option value="${k}"${k===S.ref?' selected':''}>${k}</option>`).join('');
+  $('#fRef').addEventListener('change',e=>{S.ref=e.target.value;render();});
+  $('#exDim').innerHTML=[['div','Division (KPI reporting)'],['map','Corp Comms new mapping'],['team','Corp Comms team'],['ct','Content type'],
+    ['th','Theme (any match)'],['tp','Topic (any match)'],['tm','Template'],['cl','Audience size'],['cc','Corp Comms scope'],['month','Month'],
+    ['pk','Tracking ID pack'],['tcl','Tracking ID cluster']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  $('#exMetric').innerHTML=[['es','Emails sent'],['ms','Mailings sent'],['open','Open rate (simple avg)'],
+    ['cto','Click-to-open (simple avg)'],['ctr','Click-through (simple avg)'],['uc','Unique clicks']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  ['#exDim','#exMetric','#exTop'].forEach(s=>$(s).addEventListener('change',renderBreakdown));
+  $('#bReset').addEventListener('click',resetPanel);$('#bCsv').addEventListener('click',exportCsv);
+  $$('.tab').forEach(t=>t.addEventListener('click',()=>{
+    $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+    $$('.panel').forEach(p=>p.classList.remove('active'));
+    CURRENT=t.dataset.p;$('#p-'+CURRENT).classList.add('active');buildPanel(CURRENT);render();}));
+  window.addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>{setTopH();render();},200);});
+  setTopH();buildPanel(CURRENT);render();}
+init();
+</script>
+</body>
+</html>
