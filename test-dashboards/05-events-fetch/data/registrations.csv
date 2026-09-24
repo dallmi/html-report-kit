@@ -1,0 +1,201 @@
+registration_id,session,division,region,attended
+R00000,Town hall 1,Group Functions,Switzerland,0
+R00001,Town hall 4,Global Wealth Management,Switzerland,0
+R00002,Town hall 10,Global Wealth Management,Americas,0
+R00003,Town hall 13,Asset Management,Switzerland,0
+R00004,Town hall 9,Asset Management,Americas,0
+R00005,Town hall 21,Investment Bank,APAC,1
+R00006,Town hall 23,Investment Bank,EMEA,0
+R00007,Town hall 12,Asset Management,EMEA,0
+R00008,Town hall 2,Asset Management,Americas,1
+R00009,Town hall 17,Asset Management,APAC,0
+R00010,Town hall 23,Group Functions,Switzerland,1
+R00011,Town hall 8,Non-Core and Legacy,APAC,0
+R00012,Town hall 20,Global Wealth Management,Switzerland,0
+R00013,Town hall 4,Group Functions,Switzerland,0
+R00014,Town hall 28,Investment Bank,Switzerland,0
+R00015,Town hall 30,Personal & Corporate Banking,Switzerland,1
+R00016,Town hall 20,Group Functions,EMEA,0
+R00017,Town hall 26,Personal & Corporate Banking,APAC,0
+R00018,Town hall 26,Investment Bank,Switzerland,0
+R00019,Town hall 7,Group Functions,Americas,0
+R00020,Town hall 16,Investment Bank,APAC,0
+R00021,Town hall 26,Non-Core and Legacy,EMEA,1
+R00022,Town hall 22,Non-Core and Legacy,Americas,0
+R00023,Town hall 29,Personal & Corporate Banking,APAC,1
+R00024,Town hall 6,Group Functions,EMEA,0
+R00025,Town hall 5,Asset Management,Switzerland,0
+R00026,Town hall 2,Global Wealth Management,APAC,0
+R00027,Town hall 17,Asset Management,EMEA,1
+R00028,Town hall 8,Non-Core and Legacy,APAC,1
+R00029,Town hall 28,Non-Core and Legacy,Switzerland,1
+R00030,Town hall 30,Global Wealth Management,Americas,0
+R00031,Town hall 11,Group Functions,EMEA,0
+R00032,Town hall 28,Investment Bank,Americas,1
+R00033,Town hall 28,Global Wealth Management,APAC,1
+R00034,Town hall 9,Asset Management,EMEA,0
+R00035,Town hall 12,Asset Management,Switzerland,1
+R00036,Town hall 6,Personal & Corporate Banking,Americas,1
+R00037,Town hall 12,Group Functions,Switzerland,1
+R00038,Town hall 29,Personal & Corporate Banking,Americas,0
+R00039,Town hall 16,Asset Management,EMEA,1
+R00040,Town hall 21,Investment Bank,EMEA,0
+R00041,Town hall 18,Personal & Corporate Banking,EMEA,0
+R00042,Town hall 22,Non-Core and Legacy,APAC,1
+R00043,Town hall 17,Non-Core and Legacy,EMEA,0
+R00044,Town hall 6,Group Functions,APAC,1
+R00045,Town hall 9,Asset Management,Switzerland,1
+R00046,Town hall 4,Personal & Corporate Banking,APAC,1
+R00047,Town hall 1,Asset Management,EMEA,1
+R00048,Town hall 28,Global Wealth Management,Americas,1
+R00049,Town hall 15,Personal & Corporate Banking,Americas,0
+R00050,Town hall 16,Group Functions,Americas,0
+R00051,Town hall 1,Group Functions,EMEA,0
+R00052,Town hall 20,Global Wealth Management,APAC,0
+R00053,Town hall 10,Non-Core and Legacy,EMEA,1
+R00054,Town hall 5,Global Wealth Management,Americas,0
+R00055,Town hall 9,Group Functions,Americas,1
+R00056,Town hall 16,Investment Bank,APAC,1
+R00057,Town hall 24,Group Functions,EMEA,1
+R00058,Town hall 30,Asset Management,EMEA,0
+R00059,Town hall 18,Global Wealth Management,EMEA,0
+R00060,Town hall 19,Personal & Corporate Banking,APAC,1
+R00061,Town hall 30,Personal & Corporate Banking,APAC,0
+R00062,Town hall 23,Personal & Corporate Banking,EMEA,0
+R00063,Town hall 28,Global Wealth Management,Switzerland,0
+R00064,Town hall 21,Investment Bank,Switzerland,0
+R00065,Town hall 23,Non-Core and Legacy,APAC,1
+R00066,Town hall 21,Asset Management,EMEA,1
+R00067,Town hall 29,Asset Management,APAC,1
+R00068,Town hall 10,Non-Core and Legacy,Switzerland,0
+R00069,Town hall 3,Global Wealth Management,EMEA,0
+R00070,Town hall 7,Global Wealth Management,EMEA,0
+R00071,Town hall 22,Personal & Corporate Banking,Americas,1
+R00072,Town hall 14,Asset Management,EMEA,0
+R00073,Town hall 19,Global Wealth Management,Americas,0
+R00074,Town hall 30,Asset Management,EMEA,0
+R00075,Town hall 6,Investment Bank,EMEA,0
+R00076,Town hall 20,Group Functions,APAC,0
+R00077,Town hall 9,Investment Bank,Americas,1
+R00078,Town hall 25,Asset Management,APAC,1
+R00079,Town hall 18,Personal & Corporate Banking,APAC,1
+R00080,Town hall 18,Non-Core and Legacy,Americas,0
+R00081,Town hall 18,Investment Bank,APAC,1
+R00082,Town hall 21,Asset Management,Switzerland,1
+R00083,Town hall 24,Global Wealth Management,Switzerland,0
+R00084,Town hall 12,Global Wealth Management,Switzerland,1
+R00085,Town hall 25,Asset Management,APAC,1
+R00086,Town hall 1,Asset Management,EMEA,1
+R00087,Town hall 17,Group Functions,EMEA,1
+R00088,Town hall 10,Investment Bank,EMEA,0
+R00089,Town hall 1,Investment Bank,Switzerland,1
+R00090,Town hall 6,Global Wealth Management,EMEA,0
+R00091,Town hall 30,Asset Management,Americas,0
+R00092,Town hall 29,Group Functions,EMEA,1
+R00093,Town hall 9,Personal & Corporate Banking,APAC,1
+R00094,Town hall 5,Asset Management,Americas,1
+R00095,Town hall 8,Group Functions,Switzerland,0
+R00096,Town hall 12,Non-Core and Legacy,EMEA,1
+R00097,Town hall 2,Asset Management,Switzerland,0
+R00098,Town hall 7,Personal & Corporate Banking,Switzerland,0
+R00099,Town hall 29,Investment Bank,EMEA,1
+R00100,Town hall 25,Non-Core and Legacy,APAC,0
+R00101,Town hall 20,Personal & Corporate Banking,APAC,1
+R00102,Town hall 2,Group Functions,APAC,1
+R00103,Town hall 28,Global Wealth Management,EMEA,0
+R00104,Town hall 14,Personal & Corporate Banking,APAC,1
+R00105,Town hall 26,Group Functions,APAC,0
+R00106,Town hall 6,Global Wealth Management,Americas,1
+R00107,Town hall 8,Group Functions,APAC,0
+R00108,Town hall 29,Investment Bank,APAC,1
+R00109,Town hall 3,Group Functions,APAC,1
+R00110,Town hall 19,Investment Bank,Switzerland,0
+R00111,Town hall 28,Non-Core and Legacy,Switzerland,0
+R00112,Town hall 27,Global Wealth Management,APAC,1
+R00113,Town hall 10,Global Wealth Management,Americas,1
+R00114,Town hall 19,Global Wealth Management,APAC,0
+R00115,Town hall 4,Group Functions,APAC,0
+R00116,Town hall 14,Asset Management,APAC,1
+R00117,Town hall 20,Asset Management,Americas,1
+R00118,Town hall 23,Personal & Corporate Banking,Switzerland,0
+R00119,Town hall 17,Non-Core and Legacy,EMEA,1
+R00120,Town hall 30,Personal & Corporate Banking,Americas,0
+R00121,Town hall 17,Group Functions,EMEA,1
+R00122,Town hall 12,Investment Bank,Americas,0
+R00123,Town hall 4,Global Wealth Management,APAC,1
+R00124,Town hall 30,Global Wealth Management,Switzerland,0
+R00125,Town hall 13,Investment Bank,Americas,1
+R00126,Town hall 12,Group Functions,Switzerland,1
+R00127,Town hall 14,Group Functions,APAC,0
+R00128,Town hall 5,Personal & Corporate Banking,EMEA,1
+R00129,Town hall 16,Asset Management,EMEA,1
+R00130,Town hall 14,Non-Core and Legacy,EMEA,0
+R00131,Town hall 8,Asset Management,EMEA,0
+R00132,Town hall 2,Asset Management,APAC,0
+R00133,Town hall 16,Asset Management,Americas,1
+R00134,Town hall 24,Non-Core and Legacy,APAC,1
+R00135,Town hall 23,Personal & Corporate Banking,Americas,0
+R00136,Town hall 15,Asset Management,Americas,1
+R00137,Town hall 17,Non-Core and Legacy,APAC,0
+R00138,Town hall 28,Investment Bank,Switzerland,1
+R00139,Town hall 29,Group Functions,EMEA,1
+R00140,Town hall 28,Group Functions,EMEA,1
+R00141,Town hall 8,Non-Core and Legacy,APAC,1
+R00142,Town hall 8,Group Functions,Americas,0
+R00143,Town hall 7,Group Functions,APAC,1
+R00144,Town hall 7,Global Wealth Management,Americas,0
+R00145,Town hall 6,Global Wealth Management,Switzerland,0
+R00146,Town hall 6,Personal & Corporate Banking,Switzerland,1
+R00147,Town hall 25,Investment Bank,APAC,0
+R00148,Town hall 19,Investment Bank,Americas,0
+R00149,Town hall 8,Asset Management,Switzerland,1
+R00150,Town hall 24,Non-Core and Legacy,Switzerland,1
+R00151,Town hall 19,Global Wealth Management,Americas,1
+R00152,Town hall 1,Asset Management,Switzerland,0
+R00153,Town hall 22,Non-Core and Legacy,Switzerland,1
+R00154,Town hall 25,Group Functions,Switzerland,1
+R00155,Town hall 24,Global Wealth Management,Americas,1
+R00156,Town hall 2,Personal & Corporate Banking,Americas,1
+R00157,Town hall 15,Personal & Corporate Banking,APAC,0
+R00158,Town hall 19,Asset Management,Americas,0
+R00159,Town hall 23,Global Wealth Management,APAC,0
+R00160,Town hall 23,Non-Core and Legacy,EMEA,0
+R00161,Town hall 15,Group Functions,EMEA,0
+R00162,Town hall 2,Investment Bank,APAC,0
+R00163,Town hall 8,Asset Management,EMEA,0
+R00164,Town hall 12,Global Wealth Management,EMEA,0
+R00165,Town hall 24,Non-Core and Legacy,Switzerland,1
+R00166,Town hall 20,Global Wealth Management,APAC,0
+R00167,Town hall 26,Asset Management,Americas,1
+R00168,Town hall 12,Investment Bank,APAC,0
+R00169,Town hall 23,Group Functions,APAC,1
+R00170,Town hall 19,Investment Bank,Americas,1
+R00171,Town hall 12,Personal & Corporate Banking,Americas,1
+R00172,Town hall 30,Global Wealth Management,Americas,0
+R00173,Town hall 14,Investment Bank,Switzerland,0
+R00174,Town hall 10,Investment Bank,Switzerland,1
+R00175,Town hall 24,Asset Management,APAC,1
+R00176,Town hall 18,Global Wealth Management,Switzerland,1
+R00177,Town hall 6,Investment Bank,EMEA,1
+R00178,Town hall 26,Global Wealth Management,Americas,1
+R00179,Town hall 11,Investment Bank,Switzerland,0
+R00180,Town hall 7,Investment Bank,EMEA,0
+R00181,Town hall 2,Global Wealth Management,APAC,1
+R00182,Town hall 28,Personal & Corporate Banking,Americas,1
+R00183,Town hall 28,Asset Management,APAC,0
+R00184,Town hall 3,Personal & Corporate Banking,EMEA,0
+R00185,Town hall 23,Group Functions,Switzerland,1
+R00186,Town hall 26,Investment Bank,Switzerland,1
+R00187,Town hall 25,Asset Management,Switzerland,1
+R00188,Town hall 13,Global Wealth Management,Americas,1
+R00189,Town hall 17,Non-Core and Legacy,Switzerland,0
+R00190,Town hall 7,Asset Management,Switzerland,1
+R00191,Town hall 19,Group Functions,Americas,0
+R00192,Town hall 21,Global Wealth Management,APAC,1
+R00193,Town hall 22,Investment Bank,APAC,0
+R00194,Town hall 6,Personal & Corporate Banking,Americas,1
+R00195,Town hall 18,Global Wealth Management,EMEA,0
+R00196,Town hall 29,Global Wealth Management,EMEA,0
+R00197,Town hall 22,Investment Bank,EMEA,0
+R00198,Town hall 20,Personal & Corporate Banking,EMEA,1
+R00199,Town hall 17,Investment Bank,APAC,0

@@ -10,3 +10,6 @@ _to_delete/
 __pycache__/
 *.pyc
 .venv/
+
+# Redesign skill test runs (built pages, screenshots)
+test-dashboards/_out/

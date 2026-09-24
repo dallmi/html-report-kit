@@ -1,0 +1,260 @@
+{
+ "title": "Newsletter performance 2026",
+ "audience": "Internal comms team planning the newsletter programme",
+ "questions": [
+  "Did people open the newsletters?",
+  "Did they click?",
+  "Which audiences get the most email?",
+  "Which channels reach the most people?"
+ ],
+ "assumptions": [
+  "Rates are volume-weighted: totals first, then divided",
+  "Click rate = people who clicked ÷ emails delivered"
+ ],
+ "summary": [
+  "Newsletters beat their targets: {kpi.open_rate} opened and {kpi.click_rate} clicked.",
+  "{top.audience} mailings carry most of the volume; {top.channels} reaches the most people overall."
+ ],
+ "kpis": [
+  {
+   "id": "delivered",
+   "metric": "delivered",
+   "value": {
+    "dataset": "dashboard_data_newsletters",
+    "column": "delivered",
+    "agg": "sum"
+   },
+   "compare": {
+    "type": "none",
+    "reason": "No prior period in this export"
+   },
+   "meaning": "Emails that reached an inbox, all newsletters"
+  },
+  {
+   "id": "open_rate",
+   "metric": "open_rate",
+   "value": {
+    "agg": "ratio",
+    "num": {
+     "dataset": "dashboard_data_newsletters",
+     "column": "unique_opens",
+     "agg": "sum"
+    },
+    "den": {
+     "dataset": "dashboard_data_newsletters",
+     "column": "delivered",
+     "agg": "sum"
+    }
+   },
+   "compare": {
+    "type": "target",
+    "value": {
+     "dataset": "targets",
+     "column": "value",
+     "agg": "sum",
+     "where": {
+      "key": "openRate"
+     }
+    }
+   },
+   "meaning": "Share of recipients who opened"
+  },
+  {
+   "id": "click_rate",
+   "metric": "click_rate",
+   "value": {
+    "agg": "ratio",
+    "num": {
+     "dataset": "dashboard_data_newsletters",
+     "column": "unique_clicks",
+     "agg": "sum"
+    },
+    "den": {
+     "dataset": "dashboard_data_newsletters",
+     "column": "delivered",
+     "agg": "sum"
+    }
+   },
+   "compare": {
+    "type": "target",
+    "value": {
+     "dataset": "targets",
+     "column": "value",
+     "agg": "sum",
+     "where": {
+      "key": "clickRate"
+     }
+    }
+   },
+   "meaning": "Share of recipients who clicked a link"
+  },
+  {
+   "id": "unsub_rate",
+   "metric": "unsub_rate",
+   "value": {
+    "agg": "ratio",
+    "num": {
+     "dataset": "dashboard_data_newsletters",
+     "column": "unsubscribes",
+     "agg": "sum"
+    },
+    "den": {
+     "dataset": "dashboard_data_newsletters",
+     "column": "delivered",
+     "agg": "sum"
+    }
+   },
+   "compare": {
+    "type": "target",
+    "value": {
+     "dataset": "targets",
+     "column": "value",
+     "agg": "sum",
+     "where": {
+      "key": "unsubRate"
+     }
+    }
+   },
+   "meaning": "Share of recipients who unsubscribed"
+  }
+ ],
+ "sections": [
+  {
+   "id": "trend",
+   "question": "engagement",
+   "title": "Open rate stayed above the {kpi.open_rate.compare} target every month; {last.trend.label}: {last.trend}",
+   "subtitle": "Open rate per month, volume-weighted",
+   "chart": {
+    "type": "line",
+    "dataset": "dashboard_data_newsletters",
+    "x": "sent",
+    "bucket": "month",
+    "series": [
+     {
+      "label": "Open rate",
+      "agg": "ratio",
+      "num": "unique_opens",
+      "den": "delivered"
+     }
+    ]
+   },
+   "more": [
+    {
+     "title": "Click rate per month",
+     "subtitle": "People who clicked ÷ emails delivered",
+     "chart": {
+      "type": "line",
+      "dataset": "dashboard_data_newsletters",
+      "x": "sent",
+      "bucket": "month",
+      "series": [
+       {
+        "label": "Click rate",
+        "agg": "ratio",
+        "num": "unique_clicks",
+        "den": "delivered"
+       }
+      ]
+     }
+    },
+    {
+     "title": "Opens by weekday",
+     "subtitle": "Opens per weekday, all newsletters",
+     "chart": {
+      "type": "column",
+      "dataset": "opens_and_clicks_by_weekday_data",
+      "x": "category",
+      "y": "Opens"
+     }
+    }
+   ]
+  },
+  {
+   "id": "audience",
+   "question": "audience",
+   "title": "{top.audience} newsletters carry most of the volume",
+   "subtitle": "Emails delivered by audience segment",
+   "chart": {
+    "type": "bar",
+    "dataset": "dashboard_data_newsletters",
+    "x": "audience.segment",
+    "y": "delivered"
+   },
+   "more": [
+    {
+     "title": "Largest newsletters",
+     "subtitle": "Top 10 by emails delivered",
+     "chart": {
+      "type": "table",
+      "dataset": "dashboard_data_newsletters",
+      "sort": {
+       "key": "delivered",
+       "dir": "desc"
+      },
+      "top": 10,
+      "columns": [
+       {
+        "key": "title",
+        "label": "Newsletter"
+       },
+       {
+        "key": "sent",
+        "label": "Sent"
+       },
+       {
+        "key": "delivered",
+        "bar": true
+       },
+       {
+        "key": "unique_opens"
+       },
+       {
+        "key": "unique_clicks"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "channels",
+   "question": "reach",
+   "title": "{top.channels} reaches the most people",
+   "subtitle": "People reached per channel, 2026",
+   "chart": {
+    "type": "bar",
+    "dataset": "channelmix",
+    "x": "channel",
+    "y": "reach"
+   },
+   "note": "Reach overlaps between channels, so the bars cannot be added up."
+  }
+ ],
+ "filters": [
+  {
+   "column": "audience.segment",
+   "label": "Audience"
+  }
+ ],
+ "method": [
+  "Rates add up the totals first, then divide."
+ ],
+ "changes": [
+  {
+   "was": "No headline figures",
+   "now": "four KPIs against their targets",
+   "why": "The targets were in the page but never shown."
+  },
+  {
+   "was": "Open rate plotted per newsletter in file order",
+   "now": "monthly open and click rate",
+   "why": "48 unsorted points zig-zagged in time."
+  },
+  {
+   "was": "Opens and clicks by weekday on one axis",
+   "now": "opens by weekday under More detail",
+   "why": "Clicks were too small to see next to opens."
+  }
+ ],
+ "dropped": []
+}

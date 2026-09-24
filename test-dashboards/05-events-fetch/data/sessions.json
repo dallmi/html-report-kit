@@ -1,0 +1,242 @@
+[
+ {
+  "session": "Town hall 1",
+  "date": "2026-01-24",
+  "format": "Hybrid",
+  "registrations": 1766,
+  "attendees": 1256,
+  "replay_views": 6458
+ },
+ {
+  "session": "Town hall 2",
+  "date": "2026-02-16",
+  "format": "Online",
+  "registrations": 1968,
+  "attendees": 1031,
+  "replay_views": 2552
+ },
+ {
+  "session": "Town hall 3",
+  "date": "2026-03-11",
+  "format": "Hybrid",
+  "registrations": 1323,
+  "attendees": 679,
+  "replay_views": 896
+ },
+ {
+  "session": "Town hall 4",
+  "date": "2026-04-25",
+  "format": "Hybrid",
+  "registrations": 1045,
+  "attendees": 553,
+  "replay_views": 3356
+ },
+ {
+  "session": "Town hall 5",
+  "date": "2026-05-04",
+  "format": "On site",
+  "registrations": 597,
+  "attendees": 357,
+  "replay_views": 1624
+ },
+ {
+  "session": "Town hall 6",
+  "date": "2026-06-09",
+  "format": "Hybrid",
+  "registrations": 961,
+  "attendees": 626,
+  "replay_views": 3306
+ },
+ {
+  "session": "Town hall 7",
+  "date": "2026-07-16",
+  "format": "On site",
+  "registrations": 5122,
+  "attendees": 3876,
+  "replay_views": 1863
+ },
+ {
+  "session": "Town hall 8",
+  "date": "2026-08-05",
+  "format": "Hybrid",
+  "registrations": 1903,
+  "attendees": 1143,
+  "replay_views": 826
+ },
+ {
+  "session": "Town hall 9",
+  "date": "2026-09-16",
+  "format": "On site",
+  "registrations": 1568,
+  "attendees": 841,
+  "replay_views": 2401
+ },
+ {
+  "session": "Town hall 10",
+  "date": "2026-01-10",
+  "format": "Online",
+  "registrations": 569,
+  "attendees": 475,
+  "replay_views": 836
+ },
+ {
+  "session": "Town hall 11",
+  "date": "2026-02-23",
+  "format": "Hybrid",
+  "registrations": 1045,
+  "attendees": 555,
+  "replay_views": 995
+ },
+ {
+  "session": "Town hall 12",
+  "date": "2026-03-08",
+  "format": "On site",
+  "registrations": 928,
+  "attendees": 809,
+  "replay_views": 3238
+ },
+ {
+  "session": "Town hall 13",
+  "date": "2026-04-23",
+  "format": "Hybrid",
+  "registrations": 1410,
+  "attendees": 1178,
+  "replay_views": 2272
+ },
+ {
+  "session": "Town hall 14",
+  "date": "2026-05-22",
+  "format": "Hybrid",
+  "registrations": 926,
+  "attendees": 552,
+  "replay_views": 7318
+ },
+ {
+  "session": "Town hall 15",
+  "date": "2026-06-13",
+  "format": "Hybrid",
+  "registrations": 657,
+  "attendees": 334,
+  "replay_views": 506
+ },
+ {
+  "session": "Town hall 16",
+  "date": "2026-07-02",
+  "format": "Hybrid",
+  "registrations": 821,
+  "attendees": 590,
+  "replay_views": 1743
+ },
+ {
+  "session": "Town hall 17",
+  "date": "2026-08-09",
+  "format": "Online",
+  "registrations": 1075,
+  "attendees": 706,
+  "replay_views": 2475
+ },
+ {
+  "session": "Town hall 18",
+  "date": "2026-09-06",
+  "format": "On site",
+  "registrations": 2538,
+  "attendees": 1383,
+  "replay_views": 1361
+ },
+ {
+  "session": "Town hall 19",
+  "date": "2026-01-12",
+  "format": "Online",
+  "registrations": 1567,
+  "attendees": 1300,
+  "replay_views": 7118
+ },
+ {
+  "session": "Town hall 20",
+  "date": "2026-02-10",
+  "format": "Online",
+  "registrations": 613,
+  "attendees": 508,
+  "replay_views": 222
+ },
+ {
+  "session": "Town hall 21",
+  "date": "2026-03-01",
+  "format": "Hybrid",
+  "registrations": 1169,
+  "attendees": 688,
+  "replay_views": 689
+ },
+ {
+  "session": "Town hall 22",
+  "date": "2026-04-28",
+  "format": "On site",
+  "registrations": 1732,
+  "attendees": 1289,
+  "replay_views": 2202
+ },
+ {
+  "session": "Town hall 23",
+  "date": "2026-05-06",
+  "format": "Online",
+  "registrations": 852,
+  "attendees": 640,
+  "replay_views": 3187
+ },
+ {
+  "session": "Town hall 24",
+  "date": "2026-06-26",
+  "format": "On site",
+  "registrations": 1106,
+  "attendees": 812,
+  "replay_views": 1653
+ },
+ {
+  "session": "Town hall 25",
+  "date": "2026-07-01",
+  "format": "On site",
+  "registrations": 1864,
+  "attendees": 1349,
+  "replay_views": 2159
+ },
+ {
+  "session": "Town hall 26",
+  "date": "2026-08-27",
+  "format": "On site",
+  "registrations": 730,
+  "attendees": 607,
+  "replay_views": 2755
+ },
+ {
+  "session": "Town hall 27",
+  "date": "2026-09-28",
+  "format": "Online",
+  "registrations": 849,
+  "attendees": 754,
+  "replay_views": 4183
+ },
+ {
+  "session": "Town hall 28",
+  "date": "2026-01-10",
+  "format": "On site",
+  "registrations": 1584,
+  "attendees": 1396,
+  "replay_views": 1231
+ },
+ {
+  "session": "Town hall 29",
+  "date": "2026-02-06",
+  "format": "Hybrid",
+  "registrations": 723,
+  "attendees": 618,
+  "replay_views": 1273
+ },
+ {
+  "session": "Town hall 30",
+  "date": "2026-03-25",
+  "format": "Online",
+  "registrations": 369,
+  "attendees": 232,
+  "replay_views": 3930
+ }
+]

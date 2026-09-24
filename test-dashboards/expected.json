@@ -1,0 +1,278 @@
+{
+ "01-intranet-plotly.html": [
+  {
+   "dataset": "views and visits by month",
+   "rows": 9,
+   "sums": {
+    "Views": 765488,
+    "Visits": 390519
+   }
+  },
+  {
+   "dataset": "unique visitors by week",
+   "rows": 36,
+   "sums": {
+    "uv": 356636.7
+   }
+  },
+  {
+   "dataset": "views by division",
+   "rows": 6,
+   "sums": {
+    "v": 273282
+   }
+  },
+  {
+   "dataset": "top pages table",
+   "rows": 20,
+   "sums": {
+    "views": 629213,
+    "visits": 383314,
+    "unique_visitors": 230332,
+    "bounce_rate": 8.349
+   }
+  }
+ ],
+ "02-newsletter-chartjs.html": [
+  {
+   "dataset": "newsletters (JSON script tag)",
+   "rows": 48,
+   "sums": {
+    "delivered": 1806212,
+    "opens": 1584865,
+    "unique_opens": 1108002,
+    "clicks": 209016,
+    "unique_clicks": 107828,
+    "unsubscribes": 295,
+    "audience.size": 1842593
+   }
+  },
+  {
+   "dataset": "channelMix (JS literal)",
+   "rows": 5,
+   "sums": {
+    "sends": 520,
+    "reach": 2780575
+   }
+  },
+  {
+   "dataset": "TARGETS (key/value)",
+   "rows": 3,
+   "sums": {
+    "v": 0.502
+   }
+  },
+  {
+   "dataset": "opens and clicks by weekday (Chart.js literal)",
+   "rows": 7,
+   "sums": {
+    "o": 92651,
+    "c": 14707
+   }
+  }
+ ],
+ "03-video-echarts.html": [
+  {
+   "dataset": "videoTable (pandas split)",
+   "rows": 60,
+   "sums": {
+    "views": 53385,
+    "unique_viewers": 38880,
+    "completions": 23719,
+    "avg_watch_s": 10728.2
+   }
+  },
+  {
+   "dataset": "watch time distribution (base64 JSON)",
+   "rows": 20,
+   "sums": {
+    "views": 70617
+   }
+  },
+  {
+   "dataset": "retention curve (gzip+base64 JSON)",
+   "rows": 11,
+   "sums": {
+    "position_pct": 550,
+    "town_hall": 7.659,
+    "short_clip": 9.345
+   }
+  },
+  {
+   "dataset": "views and completions by month (ECharts)",
+   "rows": 9,
+   "sums": {
+    "v": 237080,
+    "c": 116730
+   }
+  },
+  {
+   "dataset": "views by owner (ECharts pie)",
+   "rows": 5,
+   "sums": {
+    "value": 135190
+   }
+  },
+  {
+   "dataset": "top videos (Highcharts)",
+   "rows": 10,
+   "sums": {
+    "v": 24437,
+    "u": 17613
+   }
+  }
+ ],
+ "04-campaign-static.html": [
+  {
+   "dataset": "campaigns table (2-level header, de-CH numbers)",
+   "rows": 12,
+   "sums": {
+    "sent": 680391,
+    "opens": 438097,
+    "open_rate": 7.977,
+    "views": 183626,
+    "uv": 90840
+   }
+  },
+  {
+   "dataset": "pages table (rowspan, en numbers with k)",
+   "rows": 25,
+   "sums": {
+    "views": 178306.0,
+    "ctr": 5.687
+   }
+  },
+  {
+   "dataset": "KPI tiles",
+   "rows": 5,
+   "sums": {}
+  },
+  {
+   "dataset": "visits by month (SVG data attributes)",
+   "rows": 9,
+   "sums": {
+    "v": 165632
+   }
+  }
+ ],
+ "05-events-fetch/index.html": [
+  {
+   "dataset": "sessions.json (fetch)",
+   "rows": 30,
+   "sums": {
+    "registrations": 39380,
+    "attendees": 27137,
+    "replay_views": 74628
+   }
+  },
+  {
+   "dataset": "registrations.csv (d3.csv)",
+   "rows": 200,
+   "sums": {
+    "attended": 98
+   }
+  },
+  {
+   "dataset": "feedback (Vega-Lite datasets)",
+   "rows": 24,
+   "sums": {
+    "score": 94.48,
+    "responses": 10953
+   }
+  }
+ ],
+ "06-articles-vite.html": [
+  {
+   "dataset": "articles (JSON.parse in bundle)",
+   "rows": 40,
+   "sums": {
+    "views": 297794,
+    "unique_visitors": 174284,
+    "likes": 5728,
+    "comments": 944,
+    "reading_time_s": 9228
+   }
+  },
+  {
+   "dataset": "headcount (minified literal)",
+   "rows": 9,
+   "sums": {
+    "hc": 951300
+   }
+  }
+ ],
+ "../dashboard/comms-intelligence-dashboard-demo.html": [
+  {
+   "dataset": "mailP (columnar + dims)",
+   "rows": 2400,
+   "sums": {
+    "es": 21461141,
+    "op": 13610347,
+    "uc": 2116129
+   }
+  },
+  {
+   "dataset": "arts",
+   "rows": 180,
+   "sums": {
+    "v": 564587,
+    "uv": 336210
+   }
+  },
+  {
+   "dataset": "vids",
+   "rows": 320,
+   "sums": {
+    "v": 105191,
+    "uv": 83725,
+    "c1": 87267,
+    "c100": 51210
+   }
+  },
+  {
+   "dataset": "pages",
+   "rows": 20,
+   "sums": {
+    "v": 198049,
+    "uv": 88749,
+    "c": 121363
+   }
+  },
+  {
+   "dataset": "links",
+   "rows": 186,
+   "sums": {
+    "c": 113318
+   }
+  },
+  {
+   "dataset": "pgLevel",
+   "rows": 23,
+   "sums": {
+    "uv": 50702,
+    "v": 108534
+   }
+  },
+  {
+   "dataset": "pgDiv",
+   "rows": 145,
+   "sums": {
+    "uv": 46813
+   }
+  },
+  {
+   "dataset": "pgReg",
+   "rows": 115,
+   "sums": {
+    "uv": 52505
+   }
+  },
+  {
+   "dataset": "hcGeduld (key/value)",
+   "rows": 9,
+   "sums": {
+    "v": 951300
+   }
+  }
+ ]
+}
