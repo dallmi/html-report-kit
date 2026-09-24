@@ -22,9 +22,10 @@ When a specific rule below seems to conflict with this, the principle wins. A pa
 - Never overwrite the only copy. Write the result as a new file (e.g. `<name>-branded.html`) unless the user explicitly asks for in-place editing — then save the original next to it first (`<name>.orig.html`).
 - Save the checker script from the appendix as `brand_check.py` and run it on the original:
   ```bash
-  python brand_check.py <file>.html --forbid "<employer name>"
+  python brand_check.py <file>.html
   ```
-  Ask the user for the employer / brand name if you don't know it — the checker needs it to catch the name in titles, CSS variable names, export filenames and comments. The report lists every off-palette colour with its line and the **nearest palette colour** — use that as a starting point for the mapping, then apply judgement by role (step 2).
+  The report lists every off-palette colour with its line and the **nearest palette colour** — use that as a starting point for the mapping, then apply judgement by role (step 2).
+  Add `--forbid "<name>"` only when a name must not appear in the file — typically because the file is going into a Git repository or leaving the internal environment (see step 6). Don't ask for a company name otherwise; a page used internally may carry it.
 - Also read the page yourself. Find **every** place colour or style is decided, because the checker cannot see intent:
   - CSS custom properties and every rule that uses them
   - hard-coded colours in CSS, inline `style=""`, SVG attributes (`fill=`, `stroke=`)
@@ -102,18 +103,19 @@ Library recipes are in the appendix (Chart.js, Plotly, ECharts, D3/hand-drawn SV
 - Data, numbers, formulas, aggregation logic, filter logic, sort order, text meaning.
 - Element ids, `data-*` attributes, function names and anything JavaScript looks up — re-branding must not break a single interaction.
 - Chart types, except pie → donut and 3D → 2D.
-- If you notice a genuine bug or leftover (e.g. an AI assistant's chat sentence baked into the UI, a hard-coded brand name in an export filename), **report it**, and fix it only if it is clearly cosmetic or brand-related. Anything that changes behaviour: ask first.
+- If you notice a genuine bug or leftover (e.g. an AI assistant's chat sentence baked into the UI, a leftover debug label), **report it**, and fix it only if it is clearly cosmetic or brand-related. Anything that changes behaviour: ask first.
 
 ### 6. Naming and hygiene
 
-- Rename CSS variables and classes that carry the brand or company name (`--acme-red` → `--primary`, `.acme-card` → `.card`), and remove the name from `<title>`, comments, export filenames and demo text. Generic words only: "the organisation", "internal platform", `--primary`, `--corp-*`. Internal division/region names are fine — they are the vocabulary of the data.
+- Always: rename CSS variables and classes that carry a brand or company name to generic tokens (`--acme-red` → `--primary`, `.acme-card` → `.card`). Generic token names make the page reusable and keep the palette in one place.
+- Visible text is a separate question. A page used inside the organisation may name it in the title, header or footer — leave that as it is. Remove the name from `<title>`, comments, export filenames and demo text **only** when the user says the file goes into a Git repository, is shared outside, or asks for it; then use generic words ("the organisation", "internal platform") and run the checker with `--forbid`. Internal division/region names are fine either way — they are the vocabulary of the data.
 - Put all colours into one `:root` token block (appendix) and use `var(--…)` everywhere in CSS. In JavaScript, SVG presentation attributes can't resolve `var()` reliably — prefer CSS classes on SVG elements, or a single JS constant object mirroring the tokens.
 - No absolute local paths (`C:\Users\…`, `/Users/…`) in the file.
 
 ### 7. Verify — the job isn't done until this passes
 
 1. Re-run `brand_check.py` on the result. Target: **zero errors**. Every remaining warning needs a reason you can state (e.g. "complex palette used for 14 equal-weight series").
-2. Search the result for the forbidden name once more yourself (title, CSS, JS, comments, filenames).
+2. If a name was to be removed (step 6), search the result for it once more yourself (title, CSS, JS, comments, filenames).
 3. Open the page in a browser if you can (Playwright, a headless browser, or ask the user). Check: no console errors; **every** tab/view renders; filters, sorting, exports still work; nothing overlaps; no horizontal scrolling at ~900px width on **every** tab (wide tables are the usual culprit — grid columns that hold them need `minmax(0,1fr)`, not `1fr`). If you cannot open a browser, say so explicitly and give the user a 5-point checklist to click through.
    - Screenshot tip: chart libraries animate and some pages draw charts only when they scroll into view. Wait ~2 seconds before capturing, and prefer viewport screenshots over full-page ones — an empty chart in a full-page capture is usually a capture artefact, not a bug. Confirm by checking the chart instance exists before concluding anything.
 4. Look at every chart type as rendered. A token grep will not catch a blue donut segment or a red bar coming from a library default.
@@ -201,7 +203,7 @@ const layout = { font: { family: '"Frutiger","Helvetica Neue",Arial,sans-serif',
 ## Appendix C — `brand_check.py`
 
 Save exactly as `brand_check.py`, run with Python 3.8+ (standard library only).
-`python brand_check.py page.html --forbid "Employer Name" [--forbid "Other"]` — exit code 1 if errors remain.
+`python brand_check.py page.html [--forbid "Name" ...]` — exit code 1 if errors remain. `--forbid` is optional; use it only when a name must not appear in the file (step 6).
 
 ```python
 #!/usr/bin/env python3
