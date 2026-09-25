@@ -35,6 +35,14 @@ python3 scripts/build_clarity_data.py --from-html ../dashboard/clarity.html
 
 It worked if the output ends with `verified … checks against the source DATA: identical` and `wrote .../data`. The original dashboard hardcodes its year in the page, not in its data. The build therefore takes the year from the headcount months and article dates and prints it (`reporting year 2026 (inferred …)`). If that line shows the wrong year, or the build stops with `reporting year unknown`, add `--year 2026` to the command. The files land in `option-b/data/`, which Git ignores too. Run the same command again whenever `clarity.html` is replaced with a newer version.
 
+If the build stops, look at the structure of the dashboard's data first. This shows every dataset with its row count and field names, and which fields the build does not know or misses. It shows names and counts, never values, and writes nothing:
+
+```
+python scripts/build_clarity_data.py --from-html ../dashboard/clarity.html --inspect
+```
+
+Fields the build does not know are carried over unchanged. The one exception is extra mailing columns, which the build names in a `note:` line.
+
 Without the real dashboard, the demo data in this repository works instead (`--demo` stands for the demo dashboard and its reach reference month 2026-06):
 
 ```
@@ -97,7 +105,7 @@ option-b/
 │   └── mailings.json, articles.json, videos.json, pages.json, clicks.json, packs.json
 ├── overrides.yaml            # manual rows the exports miss, reviewed in Git
 └── scripts/
-    ├── build_clarity_data.py # replaces the Excel control panel
+    ├── build_clarity_data.py # replaces the Excel control panel; --inspect shows the source structure
     ├── serve.py              # local web server for the page (longer connection queue than http.server)
     └── parity_check.cjs      # cut-over check against the single-file original
 ```

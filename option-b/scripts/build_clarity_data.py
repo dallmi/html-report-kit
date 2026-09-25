@@ -16,6 +16,8 @@ Sources
                        hardcodes it in the page); default: inferred from the
                        headcount months and article dates.
   --packs FILE         pack list workbook, sheet 07-packs (optional).
+  --inspect            show the structure of DATA against what this build expects
+                       (names, types, counts; no values) and write nothing.
   --overrides FILE     manual rows the exports miss (default: overrides.yaml).
 
     python3 scripts/build_clarity_data.py --demo
@@ -96,6 +98,79 @@ def read_inline_data(path):
     if not isinstance(data, dict) or "mailP" not in data:
         raise BuildError(f"{path}: DATA is empty (template without data?)")
     return data
+
+
+def mail_columns(mp):
+    """(unknown, missing) columns of a legacy mailP block. Unknown columns are not carried over."""
+    have = set(mp) - {"dims", "cols"}
+    want = {"q", "m"} | set(MAIL_VALUES)
+    have_dims = set(mp.get("dims") or {})
+    return (sorted(have - want) + sorted(f"dims.{k}" for k in have_dims - set(MAIL_DIMS)),
+            sorted(want - have) + sorted(f"dims.{k}" for k in set(MAIL_DIMS) - have_dims))
+
+
+# what each source dataset must have, and what it may have; everything else is carried over unchanged
+SOURCE_FIELDS = {
+    "arts": ([k for k in ARTICLE_FIELDS if k not in ("y", "date", "reach")] + ["ds", "q"], ["y"]),
+    "vids": ([k for k in VIDEO_FIELDS if k != "y"] + ["q"], ["y"]),
+    "pgLevel": (PAGE_ATTRS + ["v"], ["uv", "vis", "uvy", "vy", "li", "co"]),
+    "pgDiv": (["url", "sp", "uv"], PAGE_ATTRS),
+    "pgReg": (["url", "sp", "uv"], PAGE_ATTRS),
+    "pages": ([], []),
+    "links": ([], []),
+}
+TOP_KEYS = ["mailP", "arts", "vids", "pgLevel", "pgDiv", "pgReg", "pages", "links", "hcGeduld", "hcDash", "src"]
+TOP_OPTIONAL = ["year", "asOf", "prior", "source"]
+
+
+def kind(v):
+    return ("null" if v is None else "bool" if isinstance(v, bool) else "num" if isinstance(v, (int, float))
+            else "text" if isinstance(v, str) else "list" if isinstance(v, list) else "object")
+
+
+def inspect(D, path):
+    """Structure of DATA against what the build expects: names, types and counts, never values."""
+    def line(label, text):
+        print(f"  {label:<9}{text}")
+
+    print(f"DATA in {Path(path).name}")
+    line("keys", " ".join(D))
+    miss = [k for k in TOP_KEYS if k not in D]
+    unknown = [k for k in D if k not in TOP_KEYS + TOP_OPTIONAL]
+    line("missing", " ".join(miss) or "-")
+    if unknown:
+        line("unknown", " ".join(f"{k}:{kind(D[k])}" for k in unknown) + "  (not used)")
+    line("year", "present" if isinstance(D.get("year"), int) else f"not in DATA, inferred {infer_year(D)}")
+    for k in ("asOf", "prior", "source"):
+        line(k, "present" if D.get(k) else "-")
+    mp = D.get("mailP")
+    if isinstance(mp, dict):
+        u, m = mail_columns(mp)
+        print(f"\nmailP  {len(mp.get('es') or [])} rows")
+        line("columns", " ".join(k for k in mp if k not in ("dims", "cols")))
+        line("dims", " ".join(f"{k}({len(v)})" for k, v in (mp.get("dims") or {}).items()))
+        line("unknown", (" ".join(u) + "  (NOT carried over)") if u else "-")
+        line("missing", " ".join(m) or "-")
+    for name, (required, optional) in SOURCE_FIELDS.items():
+        rows = D.get(name)
+        if not isinstance(rows, list):
+            continue
+        fields = {}
+        for r in rows:
+            for k, v in r.items():
+                fields.setdefault(k, set()).add(kind(v))
+        print(f"\n{name}  {len(rows)} rows")
+        line("fields", " ".join(fields))
+        if required or optional:
+            u = [f"{k}:{'/'.join(sorted(fields[k]))}" for k in fields if k not in required + optional]
+            line("unknown", (" ".join(u) + "  (carried over)") if u else "-")
+            line("missing", " ".join(k for k in required if k not in fields) or "-")
+    for name in ("hcGeduld", "hcDash"):
+        hc = D.get(name) or {}
+        months = sorted(hc)
+        print(f"\n{name}  {len(months)} months" + (f"  {months[0]} .. {months[-1]}" if months else ""))
+    if isinstance(D.get("src"), dict):
+        print(f"\nsrc  {' '.join(D['src'])}")
 
 
 def read_bridge(path):
@@ -197,27 +272,41 @@ def columnar(mail_by_year):
     return {"dims": dims, "cols": cols}
 
 
+def extra(row, known):
+    """Fields this build does not know: carried over unchanged, after the known ones."""
+    return {k: v for k, v in row.items() if k not in known}
+
+
+def check_year(kind, r, y):
+    """Some exports carry the year on each row; it must be the year of the list the row is in."""
+    if "y" in r and r["y"] != y:
+        raise BuildError(f"{kind} {r.get('t')!r}: year {r['y']} in the {y} list")
+
+
 def articles(rows, y, hc):
     out = []
     for a in rows:
+        check_year("article", a, y)
         date = to_iso(a["ds"])
         if int(date[5:7]) != a["m"] or a["q"] != math.ceil(a["m"] / 3):
             raise BuildError(f"article {a['t']!r}: date {a['ds']} does not match month {a['m']} / quarter {a['q']}")
         h = hc.get(f"{y}-{a['m']:02d}")
-        out.append({**{k: a[k] for k in ARTICLE_FIELDS if k in a}, "y": y, "date": date,
-                    "reach": a["uv"] / h if h else None})
-    return [{k: r[k] for k in ARTICLE_FIELDS} for r in out]
+        known = {**{k: a[k] for k in ARTICLE_FIELDS if k in a}, "y": y, "date": date,
+                 "reach": a["uv"] / h if h else None}
+        out.append({**{k: known[k] for k in ARTICLE_FIELDS}, **extra(a, ARTICLE_FIELDS + ["ds", "q"])})
+    return out
 
 
 def videos(rows, y):
     for v in rows:
+        check_year("video", v, y)
         if v["q"] != math.ceil(v["m"] / 3):
             raise BuildError(f"video {v['t']!r}: quarter {v['q']} does not match month {v['m']}")
-    return [{**{k: v[k] for k in VIDEO_FIELDS if k in v}, "y": y} for v in rows]
+    return [{**{k: v[k] for k in VIDEO_FIELDS if k in v}, "y": y, **extra(v, VIDEO_FIELDS + ["q"])} for v in rows]
 
 
 def split_rows(split, pages, name):
-    """Visitor split rows repeat every page attribute; keep url + split + uv and join in the front end."""
+    """Visitor split rows repeat every page attribute; keep url + split + its figures and join in the front end."""
     by_url = {p["url"]: p for p in pages}
     out = []
     for r in split:
@@ -226,7 +315,7 @@ def split_rows(split, pages, name):
             raise BuildError(f"{name}: url {r['url']} is not in the page-level export")
         if any(k in r and r[k] != p[k] for k in PAGE_ATTRS):
             raise BuildError(f"{name}: attributes of {r['url']} differ from the page-level export")
-        out.append({"url": r["url"], "sp": r["sp"], "uv": r["uv"]})
+        out.append({"url": r["url"], "sp": r["sp"], "uv": r["uv"], **extra(r, PAGE_ATTRS + ["sp", "uv"])})
     return out
 
 
@@ -355,13 +444,14 @@ def rebuild_legacy(manifest, files):
             out.append(r)
         return out
 
+    # y stays on the rebuilt rows: the comparison only looks at fields the source rows have
     def art(a):
         d = dt.date.fromisoformat(a["date"])
-        r = {k: v for k, v in a.items() if k not in ("y", "date", "reach")}
+        r = {k: v for k, v in a.items() if k not in ("date", "reach")}
         return {**r, "ds": d.strftime("%d %b %Y"), "q": math.ceil(a["m"] / 3)}
 
     def vid(v):
-        return {**{k: x for k, x in v.items() if k != "y"}, "q": math.ceil(v["m"] / 3)}
+        return {**v, "q": math.ceil(v["m"] / 3)}
 
     real = lambda rows: [r for r in rows if "override" not in r]
     pg = files["pages.json"]
@@ -369,8 +459,8 @@ def rebuild_legacy(manifest, files):
     out = {"mail": {y: records(y) for y in sorted(set(mail["cols"]["y"]))},
            "arts": {}, "vids": {},
            "pgLevel": [{k: v for k, v in p.items() if k != "reach"} for p in pg["pages"]],
-           "pgDiv": [{**by_url[r["url"]], "sp": r["sp"], "uv": r["uv"]} for r in pg["visitor_division"]],
-           "pgReg": [{**by_url[r["url"]], "sp": r["sp"], "uv": r["uv"]} for r in pg["visitor_region"]],
+           "pgDiv": [{**by_url[r["url"]], **r} for r in pg["visitor_division"]],
+           "pgReg": [{**by_url[r["url"]], **r} for r in pg["visitor_region"]],
            "pages": files["clicks.json"]["pages"], "links": files["clicks.json"]["links"],
            "hcGeduld": manifest["headcount"]["geduld"], "hcDash": manifest["headcount"]["dashboard"],
            "year": Y, "asOf": manifest["cutoff_date"]}
@@ -424,11 +514,14 @@ def verify(D, manifest, files):
             if len(want) != len(have):
                 bad.append(f"{name}: {len(have)} rows, source has {len(want)}")
                 continue
-            diff = next((i for i, (a, b) in enumerate(zip(want, have)) if a != b), None)
-            if diff is not None:
-                a, b = want[diff], have[diff]
-                k = next(k for k in keys if a.get(k) != b.get(k))
-                bad.append(f"{name} row {diff}, field {k}: source {a.get(k)!r}, built {b.get(k)!r}")
+            first = {}  # every field that differs anywhere, with its first row, so one run shows them all
+            for i, (a, b) in enumerate(zip(want, have)):
+                if a != b:
+                    for k in keys:
+                        if k not in first and a.get(k) != b.get(k):
+                            first[k] = (i, a.get(k), b.get(k))
+            for k, (i, x, y) in first.items():
+                bad.append(f"{name} row {i}, field {k}: source {x!r}, built {y!r}")
         elif want != have:
             bad.append(f"{name}: source {want!r}, built {have!r}")
     if bad:
@@ -470,12 +563,16 @@ def main():
     ap.add_argument("--reach-ref-month", help="YYYY-MM; default: latest month with both headcounts")
     ap.add_argument("--source-label", help="provenance line shown in the dashboard header")
     ap.add_argument("--out", default=str(ROOT / "data"))
+    ap.add_argument("--inspect", action="store_true",
+                    help="show the structure of DATA (names, types, counts; no values) and write nothing")
     args = ap.parse_args()
     if args.demo:
         args.from_html = str(DEMO_HTML)
         args.reach_ref_month = args.reach_ref_month or DEMO_REF_MONTH
     try:
         D = read_inline_data(args.from_html) if args.from_html else read_bridge(args.bridge)
+        if args.inspect:
+            return inspect(D, args.from_html or args.bridge)
         year_from = set_year(D, args)
         manifest, files, n_ov = build(D, args)
         n = verify(D, manifest, files)
@@ -484,6 +581,10 @@ def main():
         sys.exit(f"build failed: {e}")
     if year_from:
         print(f"reporting year {manifest['reporting_year']} ({year_from})")
+    for label, mp in [("mailings", D["mailP"])] + ([("prior mailings", D["prior"]["mailP"])] if D.get("prior") else []):
+        unknown = mail_columns(mp)[0]
+        if unknown:
+            print(f"note: {label} columns not carried over: {' '.join(unknown)} (run --inspect)")
     print(f"verified {n} checks against the source DATA: identical")
     for k, v in manifest["datasets"].items():
         print(f"  {v['file']:<14} {v['rows']:>6} rows" + (f"  {v['years']}" if "years" in v else ""))

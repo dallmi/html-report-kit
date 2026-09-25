@@ -77,7 +77,7 @@ function Test-InScope([string]$path) {
 }
 
 # BEGIN MANIFEST - written by scripts/check_manifest.py from the git index, never edit by hand
-$manifestVersion = "9cb3b6b03880"
+$manifestVersion = "a55b14e5c1ea"
 $manifestText = @'
 b78ddde196890da84334815589a255c66c44d8499ebb5f305c6c3ff8ee77e743  README.md
 239624d46cb7ea765b9d692d174cd67e862c38ea6d4131cc5fa3d03b041e5f40  check.cmd
@@ -88,14 +88,14 @@ ed9aa3fbc66cec9c6c2851f5416a248e3095b2a3a0bd0a50dddb5ac87031af42  dashboard/temp
 c96ba3dcf9c026faf3c082ad33c66f1ef428fa09d27aea78632008f295625cb4  dashboard/template.html
 9103dbf8f2b4d4c9c146803fe1f0f57456871f9389148be11a4a00e22b3119cb  docs/superpowers/plans/2026-09-24-redesign-skill.md
 1a461ed5a7fbfdd339fbd9db872e1f9230fb915ae9e83f70f1d34588f69d7d10  docs/superpowers/specs/2026-09-24-redesign-skill-design.md
-7168c8cf955f8dd07cd132ab7fb6db90506af902eb8237efa4e680c695f4a941  option-b/README.md
+be85d7adce695ea0238b770592af81f0ef305ec701a0a14835c523614c4dea9d  option-b/README.md
 491483bb85d87055740fe4397126d43e02ed425a68d6644fe21c49e50849115f  option-b/assets/styles-v2.css
 6f93b2e35901480ed512ce05f950e1ee161d804592c0db108170e509389640fb  option-b/assets/styles.css
 0ee6b38602e9232f42dcde2f54e34dfad3862e61802649bd86fd8f5930ed092a  option-b/assets/tokens.css
 9fd26645607a50ba5215d31a4b1c692b8bdb4dfdafe275892d71c24561c39a7d  option-b/index.html
 ce650618a8ef7454755acc84d8eee189e2474cda4db38a404a45f4e5524d576d  option-b/index2.html
 7a21b2a0549550bc14c4788520431c6d5e6b1a9c9eb7d5c895339ba9796c3761  option-b/overrides.yaml
-db9d7c2dcaeaaf5447c3737265909fbeb533da043aa0c68fe9b0cab283f71fe5  option-b/scripts/build_clarity_data.py
+4f8dc88e18386515c1227e1132b68f6bee036dfed9747f72e50085c01aea3bbb  option-b/scripts/build_clarity_data.py
 100bad68251703976689fe99387132684e9762c5cf7f8e4e6cceebf79e8356d1  option-b/scripts/parity_check.cjs
 6f5d2462ea92537fb26fa6742d3a6e2a026d8ae57e7da95efdf3f6b5ac805139  option-b/scripts/serve.py
 9a024898809bad077be1343edcc585e7b802d5d1c462daf4ab5a097637a5cb21  option-b/src/boot.js
@@ -106,7 +106,7 @@ a792a6fcdbf042872e16368ced51faa456f20cd5531fa95e938fc74bf9e6cf8d  option-b/src/c
 35bb7131d94843f2b86f13eb65784a203b5aa710bfbfa648a290ca934cda3fcc  option-b/src/components/svg.js
 482e5a78f4164f7a5d5ff6efff4fc81c382e66c9e03ba8229cbd0ac16a2f363d  option-b/src/components/v2/blocks.js
 ef327fd77c80a04a824c74f3eddea5fbba6293c29d80d856f5d1bad902860816  option-b/src/components/v2/charts.js
-92ad47f49f0fe18f98e222d2442d88ca7100b7524ff415b2dbaa0262ef8bd378  option-b/src/data/decode.js
+9b0475146940e006bd5b3df2ce6cd9a8830d4d194d9bd319e3c8d5d0a3b90371  option-b/src/data/decode.js
 2f624cc401975af31f6a82c7a9f2b310f5dd3cd80c6e3478be901750978a3ec2  option-b/src/data/loader.js
 a6474041e693ec6bd2556e550813ffdadcc1506240cb0aa1c6f166296a38cfc6  option-b/src/main-v2.js
 1fc964a27bd34ca7541effdb0fbe838a618a50ec44e2620b427c555322a99af4  option-b/src/main.js
