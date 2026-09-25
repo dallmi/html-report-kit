@@ -77,7 +77,7 @@ function Test-InScope([string]$path) {
 }
 
 # BEGIN MANIFEST - written by scripts/check_manifest.py from the git index, never edit by hand
-$manifestVersion = "03fa9594095b"
+$manifestVersion = "dcaec645aed9"
 $manifestText = @'
 9fbc265252d549262673363bd065d39c082f6e653a480fdf552c076dfc2709de  README.md
 239624d46cb7ea765b9d692d174cd67e862c38ea6d4131cc5fa3d03b041e5f40  check.cmd
@@ -88,17 +88,10 @@ ed9aa3fbc66cec9c6c2851f5416a248e3095b2a3a0bd0a50dddb5ac87031af42  dashboard/temp
 c96ba3dcf9c026faf3c082ad33c66f1ef428fa09d27aea78632008f295625cb4  dashboard/template.html
 9103dbf8f2b4d4c9c146803fe1f0f57456871f9389148be11a4a00e22b3119cb  docs/superpowers/plans/2026-09-24-redesign-skill.md
 1a461ed5a7fbfdd339fbd9db872e1f9230fb915ae9e83f70f1d34588f69d7d10  docs/superpowers/specs/2026-09-24-redesign-skill-design.md
-3007b20ec1a4546c5aa15e476606b1b54613a38eb897f8b892206d6c8fa89384  option-b/README.md
+c3932a88401b73f451f82b8b9055162b37929b839e4477b8e505e4f17eb67dcf  option-b/README.md
 491483bb85d87055740fe4397126d43e02ed425a68d6644fe21c49e50849115f  option-b/assets/styles-v2.css
 6f93b2e35901480ed512ce05f950e1ee161d804592c0db108170e509389640fb  option-b/assets/styles.css
 0ee6b38602e9232f42dcde2f54e34dfad3862e61802649bd86fd8f5930ed092a  option-b/assets/tokens.css
-edfc39c097ac7b984cb68dcbda332f2ba4838763d4ea457a33558b48f022b879  option-b/data/articles.json
-5f79d2c37280c8aac71bbd48909a09f4c6f135747a86e14cffc859c4f8094d79  option-b/data/clicks.json
-6425781dd23431ecc8ee3749abfebf39f766cf7c86da266e891aa734aa8ed5ac  option-b/data/mailings.json
-907ea1c8cafcd5c48a3c1a37d922f8c8c5e7b95c3790100e44801ebbdd5dd32f  option-b/data/manifest.json
-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945  option-b/data/packs.json
-d0fb0e97d04bb882ca8e112061af561d4bdc099f334cb9cb63b9e68e7db439fc  option-b/data/pages.json
-c4c818970fff21685377e10c0515718f665318812f62b623504f817aa8419127  option-b/data/videos.json
 e65ae47f1afe3b11cf73a3dcabd9d4c00baca993f33a0ecf6dcefb9927252c99  option-b/index.html
 3bed28a1fa9df1a8f6aaaf6726ac34a9a45b5162c98e838e90c177f3bcad959c  option-b/index2.html
 7a21b2a0549550bc14c4788520431c6d5e6b1a9c9eb7d5c895339ba9796c3761  option-b/overrides.yaml

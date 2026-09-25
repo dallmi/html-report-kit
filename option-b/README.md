@@ -13,8 +13,11 @@ Both read the same `data/` files and share the data, state and service layers. T
 
 ```bash
 # 1. data: extract the inline DATA of an existing dashboard, check it, write data/*.json
+#    demo:       the synthetic demo dashboard in this repository
 python3 scripts/build_clarity_data.py \
     --from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06
+#    production: the same command on the real dashboard, on the work machine
+python3 scripts/build_clarity_data.py --from-html <path to the real dashboard .html>
 
 # 2. serve this folder over HTTP (ES modules and fetch() do not work from file://)
 python3 -m http.server 8000
@@ -22,6 +25,8 @@ python3 -m http.server 8000
 ```
 
 Opened straight from disk, the page shows a notice explaining this instead of a blank screen.
+
+**`data/` is never in Git** (`.gitignore`). The repository holds the structure (this script and the [data contract](#data-contract)), not the figures: demo and production data are built into the same folder by the same command, so the page never changes and real figures cannot be committed by accident. The demo build is reproducible: the command above writes the files byte for byte as they were last committed, apart from `generated_at`. A fresh checkout shows the load-error notice until step 1 has run.
 
 ## Structure
 
@@ -47,7 +52,7 @@ option-b/
 │   ├── viewmodels/           # one per tab (v3), v2/ for index2: numbers in, display values out
 │   ├── views/                # tab layouts: which component gets which part of the view-model
 │   └── components/           # KPI row, charts, tables, filter bar, drawer (v2/ for index2)
-├── data/                     # the only thing that changes on refresh
+├── data/                     # the only thing that changes on refresh; not in Git, built by step 1
 │   ├── manifest.json
 │   └── mailings.json, articles.json, videos.json, pages.json, clicks.json, packs.json
 ├── overrides.yaml            # manual rows the exports miss, reviewed in Git
