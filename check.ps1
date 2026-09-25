@@ -27,7 +27,7 @@ param(
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 $sep = [IO.Path]::DirectorySeparatorChar
-$rawBase = "https://raw.githubusercontent.com/dallmi/comms-intelligence-dashboard/main"
+$rawBase = "https://raw.githubusercontent.com/dallmi/html-report-kit/main"
 # Folders that never come from the repository, and are not walked for extras.
 $skipDirs = @(".git", ".venv", "__pycache__", "node_modules", "pictures", "_to_delete", "_out")
 $skipFiles = @("check.ps1", ".DS_Store", "Thumbs.db", "desktop.ini")
