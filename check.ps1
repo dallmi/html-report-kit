@@ -77,7 +77,7 @@ function Test-InScope([string]$path) {
 }
 
 # BEGIN MANIFEST - written by scripts/check_manifest.py from the git index, never edit by hand
-$manifestVersion = "bd0971d2b93e"
+$manifestVersion = "624f7e132294"
 $manifestText = @'
 b78ddde196890da84334815589a255c66c44d8499ebb5f305c6c3ff8ee77e743  README.md
 239624d46cb7ea765b9d692d174cd67e862c38ea6d4131cc5fa3d03b041e5f40  check.cmd
@@ -88,14 +88,14 @@ ed9aa3fbc66cec9c6c2851f5416a248e3095b2a3a0bd0a50dddb5ac87031af42  dashboard/temp
 c96ba3dcf9c026faf3c082ad33c66f1ef428fa09d27aea78632008f295625cb4  dashboard/template.html
 9103dbf8f2b4d4c9c146803fe1f0f57456871f9389148be11a4a00e22b3119cb  docs/superpowers/plans/2026-09-24-redesign-skill.md
 1a461ed5a7fbfdd339fbd9db872e1f9230fb915ae9e83f70f1d34588f69d7d10  docs/superpowers/specs/2026-09-24-redesign-skill-design.md
-916ee7c87cd8936fca2bf31721f49885294437b8953fb68377b6e7fc8612028a  option-b/README.md
+93ea6a817ea140781c15ade2a8d9a1d9d3b879f18ca79836c0a71a8d06373add  option-b/README.md
 491483bb85d87055740fe4397126d43e02ed425a68d6644fe21c49e50849115f  option-b/assets/styles-v2.css
 6f93b2e35901480ed512ce05f950e1ee161d804592c0db108170e509389640fb  option-b/assets/styles.css
 0ee6b38602e9232f42dcde2f54e34dfad3862e61802649bd86fd8f5930ed092a  option-b/assets/tokens.css
 e65ae47f1afe3b11cf73a3dcabd9d4c00baca993f33a0ecf6dcefb9927252c99  option-b/index.html
 3bed28a1fa9df1a8f6aaaf6726ac34a9a45b5162c98e838e90c177f3bcad959c  option-b/index2.html
 7a21b2a0549550bc14c4788520431c6d5e6b1a9c9eb7d5c895339ba9796c3761  option-b/overrides.yaml
-8e85873018ff39f962cfa8fa8eff54d90914bd4d502bedd56a6ff0986fa01366  option-b/scripts/build_clarity_data.py
+70fb5224065a8a1164b38449e71be24b9a2a6a46ffe2dd3703bc7fdae629aac6  option-b/scripts/build_clarity_data.py
 100bad68251703976689fe99387132684e9762c5cf7f8e4e6cceebf79e8356d1  option-b/scripts/parity_check.cjs
 9a024898809bad077be1343edcc585e7b802d5d1c462daf4ab5a097637a5cb21  option-b/src/boot.js
 70ebafdf09dd7ac1c096717121ee55fef9398320da98c71baf4c66558953f0af  option-b/src/components/blocks.js

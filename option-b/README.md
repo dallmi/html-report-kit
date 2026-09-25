@@ -24,19 +24,21 @@ cd option-b
 macOS / Linux:
 
 ```bash
-python3 scripts/build_clarity_data.py --from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06
+python3 scripts/build_clarity_data.py --demo
 ```
 
 Windows:
 
 ```powershell
-python scripts/build_clarity_data.py --from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06
+python scripts/build_clarity_data.py --demo
 ```
 
-It worked if the output ends with `verified 15 checks against the source DATA: identical` and `wrote .../data`. With real data, on the work machine, replace the path (quotes keep spaces in the path working):
+`--demo` is short for `--from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06`. It worked if the output ends with `verified 15 checks against the source DATA: identical` and `wrote .../data`.
+
+With real data, on the work machine: type the command up to `--from-html `, then drag the real dashboard `.html` file into the terminal window. The terminal inserts its full path. Press Enter.
 
 ```bash
-python3 scripts/build_clarity_data.py --from-html "<path to the real dashboard .html>"
+python3 scripts/build_clarity_data.py --from-html 
 ```
 
 **3. Start the local web server** (ES modules and `fetch()` do not work from `file://`, so double-clicking the HTML file is not enough). Leave this terminal window open:

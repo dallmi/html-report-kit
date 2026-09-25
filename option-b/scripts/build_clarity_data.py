@@ -8,14 +8,14 @@ Sources
   --from-html FILE     an existing single-file dashboard (`const DATA = {...}`).
                        The migration path: the output is checked against that
                        DATA and the build fails on any difference.
+  --demo               the synthetic demo dashboard in this repository; short for
+                       --from-html DEMO_HTML --reach-ref-month DEMO_REF_MONTH.
   --bridge FILE        the bridge workbook. Not implemented here: the sheet
                        layout lives in the internal skeleton; see read_bridge().
   --packs FILE         pack list workbook, sheet 07-packs (optional).
   --overrides FILE     manual rows the exports miss (default: overrides.yaml).
 
-    python3 scripts/build_clarity_data.py \
-        --from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html \
-        --reach-ref-month 2026-06
+    python3 scripts/build_clarity_data.py --demo
 
 Standard library only; openpyxl for --packs, PyYAML once overrides.yaml has entries.
 """
@@ -30,6 +30,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_VERSION = "1.0"
+# --demo: the synthetic demo dashboard and the reach reference month its figures are built with
+DEMO_HTML = ROOT.parent / "dashboard" / "comms-intelligence-dashboard-v3-demo.html"
+DEMO_REF_MONTH = "2026-06"
 
 MAIL_DIMS = ["cc", "div", "map", "team", "ct", "tm", "cl", "pk", "tcl", "tid"]
 MAIL_VALUES = ["t", "es", "op", "uc", "ms", "po", "pc", "pu", "th", "tp"]
@@ -427,6 +430,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--from-html", help="single-file dashboard with an inline DATA block")
+    src.add_argument("--demo", action="store_true", help="the synthetic demo dashboard in this repository")
     src.add_argument("--bridge", help="bridge workbook (not implemented in this copy)")
     ap.add_argument("--packs", help="pack list workbook with sheet 07-packs")
     ap.add_argument("--overrides", default=str(ROOT / "overrides.yaml"))
@@ -434,6 +438,9 @@ def main():
     ap.add_argument("--source-label", help="provenance line shown in the dashboard header")
     ap.add_argument("--out", default=str(ROOT / "data"))
     args = ap.parse_args()
+    if args.demo:
+        args.from_html = str(DEMO_HTML)
+        args.reach_ref_month = args.reach_ref_month or DEMO_REF_MONTH
     try:
         D = read_inline_data(args.from_html) if args.from_html else read_bridge(args.bridge)
         manifest, files, n_ov = build(D, args)
