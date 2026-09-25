@@ -11,20 +11,56 @@ Both read the same `data/` files and share the data, state and service layers. T
 
 ## Run it
 
-```bash
-# 1. data: extract the inline DATA of an existing dashboard, check it, write data/*.json
-#    demo:       the synthetic demo dashboard in this repository
-python3 scripts/build_clarity_data.py \
-    --from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06
-#    production: the same command on the real dashboard, on the work machine
-python3 scripts/build_clarity_data.py --from-html <path to the real dashboard .html>
+Every block below is one line: copy it, paste it into the terminal, press Enter. Only Python is needed, no packages. On Windows, type `python` instead of `python3` (the Windows blocks already do).
 
-# 2. serve this folder over HTTP (ES modules and fetch() do not work from file://)
-python3 -m http.server 8000
-# open http://localhost:8000/ (v3) and http://localhost:8000/index2.html (v2)
+**1. Go to this folder.** Open the terminal in the repository folder, then:
+
+```
+cd option-b
 ```
 
-Opened straight from disk, the page shows a notice explaining this instead of a blank screen.
+**2. Build the data** (writes `data/*.json`; a fresh download has no `data/` folder). With the demo data in this repository:
+
+macOS / Linux:
+
+```bash
+python3 scripts/build_clarity_data.py --from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06
+```
+
+Windows:
+
+```powershell
+python scripts/build_clarity_data.py --from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06
+```
+
+It worked if the output ends with `verified 15 checks against the source DATA: identical` and `wrote .../data`. With real data, on the work machine, replace the path (quotes keep spaces in the path working):
+
+```bash
+python3 scripts/build_clarity_data.py --from-html "<path to the real dashboard .html>"
+```
+
+**3. Start the local web server** (ES modules and `fetch()` do not work from `file://`, so double-clicking the HTML file is not enough). Leave this terminal window open:
+
+macOS / Linux:
+
+```bash
+python3 -m http.server 8000
+```
+
+Windows:
+
+```powershell
+python -m http.server 8000
+```
+
+**4. Open in the browser:**
+
+- v2: http://localhost:8000/index2.html
+- v3: http://localhost:8000/
+
+**5. Stop the server:** press `Ctrl+C` in the terminal.
+
+Opened straight from disk, the page shows a notice explaining this instead of a blank screen. If port 8000 is taken, use `8001` in step 3 and in the URLs.
 
 **`data/` is never in Git** (`.gitignore`). The repository holds the structure (this script and the [data contract](#data-contract)), not the figures: demo and production data are built into the same folder by the same command, so the page never changes and real figures cannot be committed by accident. The demo build is reproducible: the command above writes the files byte for byte as they were last committed, apart from `generated_at`. A fresh checkout shows the load-error notice until step 1 has run.
 

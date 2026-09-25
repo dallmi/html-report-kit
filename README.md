@@ -2,6 +2,8 @@
 
 Single-file HTML dashboard for internal communications performance (mailings, articles, pages, video, click tracking), styled to the corporate design system (`Arbeit/00-design-system/`).
 
+**To start the dashboard (v2 and v3, data loaded from separate files):** follow [option-b/README.md → Run it](option-b/README.md#run-it). There are four copy-paste commands, and only Python is needed.
+
 ## Files
 
 | Path | Purpose |
