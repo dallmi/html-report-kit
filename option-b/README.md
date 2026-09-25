@@ -43,17 +43,19 @@ python scripts/build_clarity_data.py --demo
 
 **3. Start the local web server** (ES modules and `fetch()` do not work from `file://`, so double-clicking the HTML file is not enough). Leave this terminal window open:
 
-macOS / Linux:
-
-```bash
-python3 -m http.server 8000
-```
-
 Windows:
 
 ```powershell
-python -m http.server 8000
+python scripts/serve.py
 ```
+
+macOS / Linux:
+
+```bash
+python3 scripts/serve.py
+```
+
+Use this rather than `python -m http.server`. That server accepts only 5 waiting connections, but the page loads about 30 files at once, so some are refused and the page can hang on "Loading data".
 
 **4. Open in the browser:**
 
@@ -62,7 +64,7 @@ python -m http.server 8000
 
 **5. Stop the server:** press `Ctrl+C` in the terminal.
 
-Opened straight from disk, the page shows a notice explaining this instead of a blank screen. If port 8000 is taken, use `8001` in step 3 and in the URLs.
+Opened straight from disk, the page shows a notice explaining this instead of a blank screen. If port 8000 is taken, add `8001` to the command in step 3 (`python scripts/serve.py 8001`) and use it in the URLs.
 
 **`data/` is never in Git** (`.gitignore`). The repository holds the structure (this script and the [data contract](#data-contract)), not the figures: demo and production data are built into the same folder by the same command, so the page never changes and real figures cannot be committed by accident. The demo build is reproducible: the command above writes the files byte for byte as they were last committed, apart from `generated_at`. A fresh checkout shows the load-error notice until step 1 has run.
 
@@ -96,6 +98,7 @@ option-b/
 ├── overrides.yaml            # manual rows the exports miss, reviewed in Git
 └── scripts/
     ├── build_clarity_data.py # replaces the Excel control panel
+    ├── serve.py              # local web server for the page (longer connection queue than http.server)
     └── parity_check.cjs      # cut-over check against the single-file original
 ```
 
