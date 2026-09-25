@@ -12,6 +12,9 @@ Sources
                        --from-html DEMO_HTML --reach-ref-month DEMO_REF_MONTH.
   --bridge FILE        the bridge workbook. Not implemented here: the sheet
                        layout lives in the internal skeleton; see read_bridge().
+  --year YYYY          reporting year when DATA has none (the original dashboard
+                       hardcodes it in the page); default: inferred from the
+                       headcount months and article dates.
   --packs FILE         pack list workbook, sheet 07-packs (optional).
   --overrides FILE     manual rows the exports miss (default: overrides.yaml).
 
@@ -240,6 +243,35 @@ def apply_overrides(ds, ov, fields):
     return len(rows)
 
 
+def infer_year(D):
+    """The original (v2) dashboard hardcodes its year in the page, not in DATA: take the year
+    most headcount months and article dates carry, as the v3 fill skill does."""
+    years = {}
+    for k in D.get("hcGeduld") or {}:
+        if len(str(k)) == 7 and str(k)[:4].isdigit():
+            years[int(str(k)[:4])] = years.get(int(str(k)[:4]), 0) + 1
+    for a in D.get("arts") or []:
+        try:
+            y = int(to_iso(a.get("ds"))[:4])
+        except (BuildError, TypeError):
+            continue
+        years[y] = years.get(y, 0) + 1
+    return max(years, key=years.get) if years else None
+
+
+def set_year(D, args):
+    """DATA.year, else --year, else inferred. Returns where it came from, for the build log."""
+    if isinstance(D.get("year"), int):
+        if args.year and args.year != D["year"]:
+            raise BuildError(f"--year {args.year} contradicts DATA.year {D['year']}")
+        return None
+    D["year"] = args.year or infer_year(D)
+    if not D["year"]:
+        raise BuildError("reporting year unknown: DATA has no year, and neither headcount months nor "
+                         "article dates give one; pass --year YYYY")
+    return "--year" if args.year else "inferred from headcount months and article dates"
+
+
 def build(D, args):
     Y = D.get("year")
     if not isinstance(Y, int):
@@ -434,6 +466,7 @@ def main():
     src.add_argument("--bridge", help="bridge workbook (not implemented in this copy)")
     ap.add_argument("--packs", help="pack list workbook with sheet 07-packs")
     ap.add_argument("--overrides", default=str(ROOT / "overrides.yaml"))
+    ap.add_argument("--year", type=int, help="reporting year, when DATA has none and it cannot be inferred")
     ap.add_argument("--reach-ref-month", help="YYYY-MM; default: latest month with both headcounts")
     ap.add_argument("--source-label", help="provenance line shown in the dashboard header")
     ap.add_argument("--out", default=str(ROOT / "data"))
@@ -443,11 +476,14 @@ def main():
         args.reach_ref_month = args.reach_ref_month or DEMO_REF_MONTH
     try:
         D = read_inline_data(args.from_html) if args.from_html else read_bridge(args.bridge)
+        year_from = set_year(D, args)
         manifest, files, n_ov = build(D, args)
         n = verify(D, manifest, files)
         write(Path(args.out), manifest, files)
     except BuildError as e:
         sys.exit(f"build failed: {e}")
+    if year_from:
+        print(f"reporting year {manifest['reporting_year']} ({year_from})")
     print(f"verified {n} checks against the source DATA: identical")
     for k, v in manifest["datasets"].items():
         print(f"  {v['file']:<14} {v['rows']:>6} rows" + (f"  {v['years']}" if "years" in v else ""))

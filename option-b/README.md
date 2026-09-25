@@ -33,7 +33,7 @@ macOS / Linux:
 python3 scripts/build_clarity_data.py --from-html ../dashboard/clarity.html
 ```
 
-It worked if the output ends with `verified … checks against the source DATA: identical` and `wrote .../data`. The files land in `option-b/data/`, which Git ignores too. Run the same command again whenever `clarity.html` is replaced with a newer version.
+It worked if the output ends with `verified … checks against the source DATA: identical` and `wrote .../data`. The original dashboard hardcodes its year in the page, not in its data. The build therefore takes the year from the headcount months and article dates and prints it (`reporting year 2026 (inferred …)`). If that line shows the wrong year, or the build stops with `reporting year unknown`, add `--year 2026` to the command. The files land in `option-b/data/`, which Git ignores too. Run the same command again whenever `clarity.html` is replaced with a newer version.
 
 Without the real dashboard, the demo data in this repository works instead (`--demo` stands for the demo dashboard and its reach reference month 2026-06):
 
