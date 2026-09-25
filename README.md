@@ -24,12 +24,26 @@ Single-file HTML dashboard for internal communications performance (mailings, ar
 | `scripts/redesign_skill_tool.py` | Maintains the redesign skill: `extract` the inline script, `embed` it back (and sync `redesign.txt`), `test`, `verify` (txt identical, instruction length, `--forbid NAME`) |
 | `scripts/tests/` | Tests for the redesign script against the synthetic dashboards in `test-dashboards/` (answer key `expected.json`) and a fixture layout |
 | `test-dashboards/`, `scripts/build_test_dashboards.py` | Synthetic comms dashboards that embed their data in the common ways (Plotly, Chart.js, ECharts, Highcharts, static tables, SVG, fetch, Vite bundle) plus the answer key. All names and figures fictional |
+| `check.ps1`, `check.cmd` | File check for a hand-copied folder on a machine without git: hashes every repository file, names each one that is missing or outdated (also browser copies like `name (1).ext`) and prints its download URL. The file list is embedded in `check.ps1` |
+| `scripts/check_manifest.py` | Writes that embedded list from the git index (`build`, `verify`, `install-hook`); `scripts/tests/test_check_manifest.py` fails while it is out of date |
 
 The demo data includes a synthetic `DATA.prior` block (2025, same schema) and `DATA.asOf`; v3 uses them for year-on-year change and the partial-month flag, v2 ignores them. Production needs the prior-year email, article and video exports in the same schema.
 
 ```bash
 python3 scripts/build_demo.py
 ```
+
+## Hand-copying to a machine without git
+
+Where cloning and ZIP downloads are blocked, files come down one at a time. To see whether the folder is complete and current:
+
+1. Download `check.ps1` fresh (it carries the list of files and their hashes, so an old copy checks against an old list). `check.cmd` only needs downloading once.
+2. Double-click `check.cmd` in the folder that mirrors the repository. Or run `.\check.ps1 -Only dashboard,skills` to check some folders only.
+3. Download every URL it prints and save it under the path shown, replacing the old file. `-Open` opens them all in the browser. Run it again until it reports `all files current`.
+
+A file with Windows line endings (CRLF) counts as current. Local files the repository does not have (real data, outputs) are counted but left alone, and `-ShowExtra` lists them.
+
+On the machine that commits, run `python3 scripts/check_manifest.py install-hook` once. From then on every commit rebuilds the list in `check.ps1`.
 
 ## Using real data
 
