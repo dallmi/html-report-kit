@@ -43,6 +43,18 @@ python scripts/build_clarity_data.py --from-html ../dashboard/clarity.html --ins
 
 Fields the build does not know are carried over unchanged. The one exception is extra mailing columns, which the build names in a `note:` line.
 
+**From the bridge workbook instead** (the long-term source). Save the bridge workbook as `dashboard/bridge.xlsx` and the pack list as `dashboard/packs.xlsx` (Git ignores every `.xlsx` in `dashboard/`). Open the bridge workbook in Excel and save it once first: the build reads the values Excel last calculated, not the formulas. Then, with the cut-off date of the data:
+
+```
+python scripts/build_clarity_data.py --bridge ../dashboard/bridge.xlsx --packs ../dashboard/packs.xlsx --cutoff 2026-09-19
+```
+
+It worked if the output ends with `verified … checks against the workbook: identical`. Read the `note:` lines: they name what the build decided on its own (a missing column, a headcount row whose Key disagrees with its Year and Month, tracking IDs whose pack is not in the pack list). If the build stops, check the workbook's structure first. This shows, per sheet, the header row, the row count, the columns the build misses and the ones it does not use; names and counts only, never values:
+
+```
+python scripts/build_clarity_data.py --bridge ../dashboard/bridge.xlsx --packs ../dashboard/packs.xlsx --inspect
+```
+
 Without the real dashboard, the demo data in this repository works instead (`--demo` stands for the demo dashboard and its reach reference month 2026-06):
 
 ```
@@ -107,7 +119,8 @@ option-b/
 └── scripts/
     ├── build_clarity_data.py # replaces the Excel control panel; --inspect shows the source structure
     ├── serve.py              # local web server for the page (longer connection queue than http.server)
-    └── parity_check.cjs      # cut-over check against the single-file original
+    ├── parity_check.cjs      # cut-over check against the single-file original
+    └── tests/test_bridge.py  # --bridge against a workbook written from the demo data
 ```
 
 Deploy boundary: everything except `data/` is the container image and goes through the merge request and pipeline. `data/` is a mounted volume or object-store prefix and is replaced on its own. To read data from somewhere else, change `<meta name="data-base" content="data/">` in the two shells.
@@ -131,7 +144,7 @@ The loader compares every file with the row count the manifest announces. If the
 
 `scripts/build_clarity_data.py` does, once and before anything reaches the page:
 
-1. **Inclusion**: packs without `in_report` are dropped (`--packs`). The per-sheet `Include` flags of the bridge workbook belong in `read_bridge()`.
+1. **Inclusion**: packs without `in_report` are dropped (`--packs`); a pack list without that column puts every pack in, with a note. The bridge workbook's `Include` column is a formula on its control-panel filters, not a rule, so every row is read.
 2. **Date conversion**: Excel serials and "05 Mar 2026" strings become ISO dates; month and quarter are checked against the date.
 3. **Derived metrics**: article reach and intranet reach, from `manifest.headcount`.
 4. **Overrides**: rows from `overrides.yaml` (videos and articles; needs PyYAML once the file has entries), each with a `reason`.
@@ -139,7 +152,19 @@ The loader compares every file with the row count the manifest announces. If the
 
 **Refresh through the Excel agent.** The `comms-dashboard-to-excel` skill (`../skills/comms-dashboard-to-excel/`) writes the same seven files next to its workbook, in the folder `comms-intelligence-data-<cut-off>-json/`, byte-identical to this script's output for the same dashboard (overrides and pack list aside). For the workplace agent builder: `comms-dashboard-to-excel.txt` is the knowledge file, `agent-instructions.txt` the prompt. Its JSON section mirrors this script: change both together.
 
-`--bridge` (reading the bridge workbook directly) is a stub. Its sheet layout is in the internal build skeleton; port it into `read_bridge()` so it returns the same dictionary as `read_inline_data()`. Replacing the workbook with a Fabric feed later only changes that function.
+`--bridge` reads the bridge workbook directly: `read_bridge()` returns the same dictionary as `read_inline_data()`, so everything after it is shared. Replacing the workbook with a Fabric feed later only changes that function. Columns are found by their header text (case and spacing do not matter), so moving or adding columns changes nothing; each sheet's columns are listed in `MAIL_SHEET`, `ART_SHEET` and the constants after them.
+
+| Sheet | Becomes | Rules |
+|---|---|---|
+| `Data_Mailings` | `mailings.json` | Reporting year = latest `Year`; the year before is the prior-year block when the sheet has rows for it. Blank `Corp Comms KPI reporting` → "Non Corp Comms" (sender Not Corp Comms) or "Corp Comms – unmapped"; blank `Corp Comms new mapping` → "Not mapped". Blank counts are 0, blank rates stay empty and are left out of averages. `Theme` and `Topic` hold one value each |
+| `Data_Articles` | `articles.json` | Year from `publishing date`; `UV_total` is the visitor count; `author` keeps the address, `aus` is the display name built from it (first.last@… → First Last); `topic tag` is comma-separated |
+| `Data_Videos` | `videos.json` | Year from `created date`, which must fall in `_Month` |
+| `Data_Pages_level`, `…_Divisional_Split`, `…_Regional_Split` | `pages.json` | The splits keep URL, segment and unique visitors (and YTD where present); page attributes come from the page level. The two `Target …` columns are organisation and region, in that order; `Topic Tag` is comma-separated |
+| `Data_Clicks_Pages`, `Data_Clicks_Links` | `clicks.json` | CTVR and UCTUVR are left out: the page computes them |
+| `Ref_Headcount` | `manifest.headcount` | One table per denominator under a title naming Geduld or Dashboard; the month comes from `Year` and `Month`; only `Status` = Internal counts. A month where Internal ≠ Active + Paid leave + Unpaid leave gets a note. Without a Dashboard table, intranet reach uses the Geduld headcount (with a note) |
+| pack list, sheet `07-packs` | pack and cluster names | A tracking ID reads `PREFIX-NNNNNNN-…`: `PREFIX-NNNNNNN` is the `Pack ID`, `PREFIX` the `Cluster prefix`; `0000000` means no pack. A prefix is named by the `Cluster` its filled rows carry. `CCCCC` is a placeholder: `CCCCC-0000000-…` counts as no tracking ID, and it names no cluster |
+
+`scripts/tests/test_bridge.py` writes a bridge workbook and a pack list in this layout from the demo data, reads them back and compares every record with the demo dashboard (`python3 -m unittest discover -s option-b/scripts/tests`, from the repository root; needs openpyxl).
 
 ## Verification
 
@@ -170,4 +195,5 @@ NODE_PATH=<folder containing node_modules/playwright> node scripts/parity_check.
 - Confirm the two headcount denominators and who owns them.
 - Decide where `data/` is served from (mounted volume vs object store) with the platform owner.
 - Name the person accountable for running the refresh before go-live.
-- Port the bridge workbook reader (`read_bridge()`), then point `data/` at the mounted volume. Real exports never go into Git.
+- Run `--bridge` on the real workbook once and compare the result with the original dashboard, then point `data/` at the mounted volume. Real exports never go into Git.
+- Bridge workbook: where the Dashboard headcount table is, and the Key of January 2026 in the Geduld table (it reads 2025-01).

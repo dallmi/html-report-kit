@@ -77,7 +77,7 @@ function Test-InScope([string]$path) {
 }
 
 # BEGIN MANIFEST - written by scripts/check_manifest.py from the git index, never edit by hand
-$manifestVersion = "a55b14e5c1ea"
+$manifestVersion = "a208099ffb7e"
 $manifestText = @'
 b78ddde196890da84334815589a255c66c44d8499ebb5f305c6c3ff8ee77e743  README.md
 239624d46cb7ea765b9d692d174cd67e862c38ea6d4131cc5fa3d03b041e5f40  check.cmd
@@ -88,16 +88,17 @@ ed9aa3fbc66cec9c6c2851f5416a248e3095b2a3a0bd0a50dddb5ac87031af42  dashboard/temp
 c96ba3dcf9c026faf3c082ad33c66f1ef428fa09d27aea78632008f295625cb4  dashboard/template.html
 9103dbf8f2b4d4c9c146803fe1f0f57456871f9389148be11a4a00e22b3119cb  docs/superpowers/plans/2026-09-24-redesign-skill.md
 1a461ed5a7fbfdd339fbd9db872e1f9230fb915ae9e83f70f1d34588f69d7d10  docs/superpowers/specs/2026-09-24-redesign-skill-design.md
-be85d7adce695ea0238b770592af81f0ef305ec701a0a14835c523614c4dea9d  option-b/README.md
+3bd76faa53e923aeffaa42e923d90ef8a179609fc9d2848dd79dcb011907f689  option-b/README.md
 491483bb85d87055740fe4397126d43e02ed425a68d6644fe21c49e50849115f  option-b/assets/styles-v2.css
 6f93b2e35901480ed512ce05f950e1ee161d804592c0db108170e509389640fb  option-b/assets/styles.css
 0ee6b38602e9232f42dcde2f54e34dfad3862e61802649bd86fd8f5930ed092a  option-b/assets/tokens.css
 9fd26645607a50ba5215d31a4b1c692b8bdb4dfdafe275892d71c24561c39a7d  option-b/index.html
 ce650618a8ef7454755acc84d8eee189e2474cda4db38a404a45f4e5524d576d  option-b/index2.html
 7a21b2a0549550bc14c4788520431c6d5e6b1a9c9eb7d5c895339ba9796c3761  option-b/overrides.yaml
-4f8dc88e18386515c1227e1132b68f6bee036dfed9747f72e50085c01aea3bbb  option-b/scripts/build_clarity_data.py
+b8445aff5fc3c52bca89a3d21e011f9859a8e7b71accf1f989bd9a2dfe27f546  option-b/scripts/build_clarity_data.py
 100bad68251703976689fe99387132684e9762c5cf7f8e4e6cceebf79e8356d1  option-b/scripts/parity_check.cjs
 6f5d2462ea92537fb26fa6742d3a6e2a026d8ae57e7da95efdf3f6b5ac805139  option-b/scripts/serve.py
+b5eb706e5e31658c86e57f900d61daf7397b66f91c0a8637b3aefd6e413034e3  option-b/scripts/tests/test_bridge.py
 9a024898809bad077be1343edcc585e7b802d5d1c462daf4ab5a097637a5cb21  option-b/src/boot.js
 70ebafdf09dd7ac1c096717121ee55fef9398320da98c71baf4c66558953f0af  option-b/src/components/blocks.js
 7bda67564f01ef12d4e1769297b602bd364a02d44ee92e6e2a63a59c24f004e8  option-b/src/components/charts.js
