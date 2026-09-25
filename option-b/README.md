@@ -19,26 +19,26 @@ Every block below is one line: copy it, paste it into the terminal, press Enter.
 cd option-b
 ```
 
-**2. Build the data** (writes `data/*.json`; a fresh download has no `data/` folder). With the demo data in this repository:
-
-macOS / Linux:
-
-```bash
-python3 scripts/build_clarity_data.py --demo
-```
+**2. Build the data** from the real dashboard. Save it as `dashboard/clarity.html` (the `dashboard/` folder next to `option-b/`; Git ignores this file, so real figures stay out of the repository). Then:
 
 Windows:
 
 ```powershell
-python scripts/build_clarity_data.py --demo
+python scripts/build_clarity_data.py --from-html ../dashboard/clarity.html
 ```
 
-`--demo` is short for `--from-html ../dashboard/comms-intelligence-dashboard-v3-demo.html --reach-ref-month 2026-06`. It worked if the output ends with `verified 15 checks against the source DATA: identical` and `wrote .../data`.
-
-With real data, on the work machine: type the command up to `--from-html `, then drag the real dashboard `.html` file into the terminal window. The terminal inserts its full path. Press Enter.
+macOS / Linux:
 
 ```bash
-python3 scripts/build_clarity_data.py --from-html 
+python3 scripts/build_clarity_data.py --from-html ../dashboard/clarity.html
+```
+
+It worked if the output ends with `verified … checks against the source DATA: identical` and `wrote .../data`. The files land in `option-b/data/`, which Git ignores too. Run the same command again whenever `clarity.html` is replaced with a newer version.
+
+Without the real dashboard, the demo data in this repository works instead (`--demo` stands for the demo dashboard and its reach reference month 2026-06):
+
+```
+python scripts/build_clarity_data.py --demo
 ```
 
 **3. Start the local web server** (ES modules and `fetch()` do not work from `file://`, so double-clicking the HTML file is not enough). Leave this terminal window open:

@@ -14,5 +14,8 @@ __pycache__/
 # Redesign skill test runs (built pages, screenshots)
 test-dashboards/_out/
 
+# The real dashboard the data is built from (production figures), never in git
+dashboard/clarity.html
+
 # Dashboard data: built locally by option-b/scripts/build_clarity_data.py (demo or production), never in git
 option-b/data/
