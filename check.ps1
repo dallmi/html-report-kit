@@ -77,7 +77,7 @@ function Test-InScope([string]$path) {
 }
 
 # BEGIN MANIFEST - written by scripts/check_manifest.py from the git index, never edit by hand
-$manifestVersion = "a208099ffb7e"
+$manifestVersion = "c37fa717d31a"
 $manifestText = @'
 b78ddde196890da84334815589a255c66c44d8499ebb5f305c6c3ff8ee77e743  README.md
 239624d46cb7ea765b9d692d174cd67e862c38ea6d4131cc5fa3d03b041e5f40  check.cmd
@@ -86,6 +86,7 @@ b78ddde196890da84334815589a255c66c44d8499ebb5f305c6c3ff8ee77e743  README.md
 658c54e5c79d472cd0782bb2c5b98082a79531a0f52b2adf521906c93c1dc730  dashboard/compare.html
 ed9aa3fbc66cec9c6c2851f5416a248e3095b2a3a0bd0a50dddb5ac87031af42  dashboard/template-v3.html
 c96ba3dcf9c026faf3c082ad33c66f1ef428fa09d27aea78632008f295625cb4  dashboard/template.html
+e88c6970a72b779f96d010009ab0e808ae522633ccc01e41a65008549f9aa477  docs/move-option-b-to-gitlab.md
 9103dbf8f2b4d4c9c146803fe1f0f57456871f9389148be11a4a00e22b3119cb  docs/superpowers/plans/2026-09-24-redesign-skill.md
 1a461ed5a7fbfdd339fbd9db872e1f9230fb915ae9e83f70f1d34588f69d7d10  docs/superpowers/specs/2026-09-24-redesign-skill-design.md
 3bd76faa53e923aeffaa42e923d90ef8a179609fc9d2848dd79dcb011907f689  option-b/README.md
@@ -98,7 +99,7 @@ ce650618a8ef7454755acc84d8eee189e2474cda4db38a404a45f4e5524d576d  option-b/index
 b8445aff5fc3c52bca89a3d21e011f9859a8e7b71accf1f989bd9a2dfe27f546  option-b/scripts/build_clarity_data.py
 100bad68251703976689fe99387132684e9762c5cf7f8e4e6cceebf79e8356d1  option-b/scripts/parity_check.cjs
 6f5d2462ea92537fb26fa6742d3a6e2a026d8ae57e7da95efdf3f6b5ac805139  option-b/scripts/serve.py
-b5eb706e5e31658c86e57f900d61daf7397b66f91c0a8637b3aefd6e413034e3  option-b/scripts/tests/test_bridge.py
+fd7a1a85267510b7ac42bfc5979025aaae22cc457e89d306a95856adbd9beed9  option-b/scripts/tests/test_bridge.py
 9a024898809bad077be1343edcc585e7b802d5d1c462daf4ab5a097637a5cb21  option-b/src/boot.js
 70ebafdf09dd7ac1c096717121ee55fef9398320da98c71baf4c66558953f0af  option-b/src/components/blocks.js
 7bda67564f01ef12d4e1769297b602bd364a02d44ee92e6e2a63a59c24f004e8  option-b/src/components/charts.js
