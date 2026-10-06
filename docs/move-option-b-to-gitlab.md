@@ -66,7 +66,7 @@ git ls-files | grep -E '^data/|\.xlsx$|\.(jpe?g|png)$|__pycache__'
 git grep -Inwi --cached 'u[b]s'
 ```
 
-- The first line prints about **53**.
+- The first line prints about **54**.
 - The other two print **nothing**. If either prints a line, do not commit.
 
 ## 5. Name, commit and push

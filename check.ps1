@@ -77,7 +77,7 @@ function Test-InScope([string]$path) {
 }
 
 # BEGIN MANIFEST - written by scripts/check_manifest.py from the git index, never edit by hand
-$manifestVersion = "c37fa717d31a"
+$manifestVersion = "559b8c541f22"
 $manifestText = @'
 b78ddde196890da84334815589a255c66c44d8499ebb5f305c6c3ff8ee77e743  README.md
 239624d46cb7ea765b9d692d174cd67e862c38ea6d4131cc5fa3d03b041e5f40  check.cmd
@@ -86,10 +86,11 @@ b78ddde196890da84334815589a255c66c44d8499ebb5f305c6c3ff8ee77e743  README.md
 658c54e5c79d472cd0782bb2c5b98082a79531a0f52b2adf521906c93c1dc730  dashboard/compare.html
 ed9aa3fbc66cec9c6c2851f5416a248e3095b2a3a0bd0a50dddb5ac87031af42  dashboard/template-v3.html
 c96ba3dcf9c026faf3c082ad33c66f1ef428fa09d27aea78632008f295625cb4  dashboard/template.html
-e88c6970a72b779f96d010009ab0e808ae522633ccc01e41a65008549f9aa477  docs/move-option-b-to-gitlab.md
+a7f3fa58eb6d8aac71105decd0113048e4dc5065f624aa6901320a29a2614352  docs/move-option-b-to-gitlab.md
 9103dbf8f2b4d4c9c146803fe1f0f57456871f9389148be11a4a00e22b3119cb  docs/superpowers/plans/2026-09-24-redesign-skill.md
 1a461ed5a7fbfdd339fbd9db872e1f9230fb915ae9e83f70f1d34588f69d7d10  docs/superpowers/specs/2026-09-24-redesign-skill-design.md
-3bd76faa53e923aeffaa42e923d90ef8a179609fc9d2848dd79dcb011907f689  option-b/README.md
+b33edf01b030de4a8559e6f51ad54b6196113a1fe53a7bb5f56d67b4116ae7a6  option-b/ARCHITECTURE.md
+d346da352bf8b948a0862f33ee243f64ed0bab7d9a6946cb50a50bcbb7a02ccf  option-b/README.md
 491483bb85d87055740fe4397126d43e02ed425a68d6644fe21c49e50849115f  option-b/assets/styles-v2.css
 6f93b2e35901480ed512ce05f950e1ee161d804592c0db108170e509389640fb  option-b/assets/styles.css
 0ee6b38602e9232f42dcde2f54e34dfad3862e61802649bd86fd8f5930ed092a  option-b/assets/tokens.css

@@ -1,6 +1,8 @@
-# Comms Intelligence Dashboard: Option B (data separated from presentation)
+# Comms Intelligence Dashboard
 
 The single-file dashboards from `../dashboard/` rebuilt so that a data refresh never needs a code change, a merge request or a redeploy. Figures live in `data/*.json`; the page is a static shell that loads them.
+
+**For architects and platform owners:** [ARCHITECTURE.md](ARCHITECTURE.md) covers how the page works, what hosting it requires, who maintains what, and how the data can come from the gold layer instead of data dumps.
 
 | Page | What it is |
 |---|---|
@@ -8,6 +10,10 @@ The single-file dashboards from `../dashboard/` rebuilt so that a data refresh n
 | `index2.html` | The branded original (v2 from `../dashboard/template.html`): left-hand control panel with every filter, not redesigned |
 
 Both read the same `data/` files and share the data, state and service layers. They show exactly what their single-file originals show (see [Verification](#verification)).
+
+## How the page gets its figures
+
+The HTML files hold layout only: header, tabs and empty containers. They contain no figures. At load, `src/main.js` asks `src/data/loader.js` to fetch `data/manifest.json` and every file it lists, checks schema version and row counts, and decodes the files (`src/data/decode.js`). The view-models in `src/viewmodels/` compute the figures and the components in `src/components/` draw them into the empty containers. A refresh replaces `data/` only, so layout and calculations stay the same. Details: [ARCHITECTURE.md → The page is an empty shell](ARCHITECTURE.md#the-page-is-an-empty-shell).
 
 ## Run it
 
